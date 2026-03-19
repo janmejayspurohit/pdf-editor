@@ -105,7 +105,7 @@ jobs:
 
       - name: Upload Test Reports
         if: always() && steps.check-reports.outputs.reports-present == 'true'
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: test-reports-jdk-${{ matrix.jdk-version }}-spring-security-${{ matrix.spring-security }}
           path: |
@@ -163,7 +163,7 @@ jobs:
           DISABLE_ADDITIONAL_FEATURES: true
 
       - name: Upload OpenAPI Documentation
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: openapi-docs
           path: ./SwaggerDoc.json
@@ -196,7 +196,7 @@ jobs:
 
       - name: FAILED - Check licenses for compatibility
         if: failure()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: dependencies-without-allowed-license.json
           path: |
@@ -503,7 +503,7 @@ jobs:
 
       # - name: Upload Docker build reports
       #   if: always()
-      #   uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+      #   uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       #   with:
       #     name: reports-docker-${{ matrix.docker.name }}
       #     path: |
