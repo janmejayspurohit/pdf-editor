@@ -20,8 +20,6 @@ import type { ToolPanelMode } from "@app/constants/toolPanel";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { updateService, UpdateSummary } from "@app/services/updateService";
 import UpdateModal from "@app/components/shared/UpdateModal";
-import { getVersion } from "@tauri-apps/api/app";
-import { isTauri } from "@tauri-apps/api/core";
 import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
@@ -42,10 +40,6 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
   const [updateSummary, setUpdateSummary] = useState<UpdateSummary | null>(null);
   const [updateModalOpened, setUpdateModalOpened] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
-  const [mismatchVersion, setMismatchVersion] = useState(false);
-  const isTauriApp = useMemo(() => isTauri(), []);
-  const [appVersion, setAppVersion] = useState<string | null>(null);
-  const frontendVersionLabel = appVersion ?? t("common.loading", "Loading...");
 
   // Sync local state with preference changes
   useEffect(() => {
@@ -77,61 +71,13 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
       if (isNewerVersion) {
         setUpdateSummary(summary);
       } else {
-        // Clear any existing update summary if user is on latest version
         setUpdateSummary(null);
       }
     } else {
-      // No update available (latest_version is null) - clear any existing update summary
       setUpdateSummary(null);
     }
     setCheckingUpdate(false);
   };
-
-  useEffect(() => {
-    if (!isTauriApp) {
-      setMismatchVersion(false);
-      return;
-    }
-
-    let cancelled = false;
-    const fetchFrontendVersion = async () => {
-      try {
-        const frontendVersion = await getVersion();
-        if (!cancelled) {
-          setAppVersion(frontendVersion);
-        }
-      } catch (error) {
-        console.error("[GeneralSection] Failed to fetch frontend version:", error);
-      }
-    };
-
-    fetchFrontendVersion();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isTauriApp]);
-
-  useEffect(() => {
-    if (!isTauriApp) {
-      return;
-    }
-
-    if (!appVersion || !config?.appVersion) {
-      setMismatchVersion(false);
-      return;
-    }
-
-    if (appVersion !== config.appVersion) {
-      console.warn("[GeneralSection] Mismatch between Tauri version and AppConfig version:", {
-        backendVersion: config.appVersion,
-        frontendVersion: appVersion,
-      });
-      setMismatchVersion(true);
-    } else {
-      setMismatchVersion(false);
-    }
-  }, [isTauriApp, appVersion, config?.appVersion]);
 
   return (
     <Stack gap="lg">
@@ -169,26 +115,6 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
                 )}
               </Group>
             </div>
-            {isTauriApp && (
-              <Group justify="space-between" align="center">
-                <div>
-                  <Text size="sm" c="dimmed">
-                    {t("settings.general.updates.currentFrontendVersion", "Current Frontend Version")}:{" "}
-                    <Text component="span" fw={500}>
-                      {frontendVersionLabel}
-                    </Text>
-                  </Text>
-                  {mismatchVersion && (
-                    <Text size="sm" c="red" mt={4}>
-                      {t(
-                        "settings.general.updates.versionMismatch",
-                        "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version.",
-                      )}
-                    </Text>
-                  )}
-                </div>
-              </Group>
-            )}
             <Group justify="space-between" align="center">
               <div>
                 <Text size="sm" c="dimmed">
