@@ -6,7 +6,6 @@ import { useEffect, useRef } from 'react';
 import { ToolId } from '@app/types/toolId';
 import { parseToolRoute, updateToolRoute, clearToolRoute } from '@app/utils/urlRouting';
 import { ToolRegistry } from '@app/data/toolsTaxonomy';
-import { firePixel } from '@app/utils/scarfTracking';
 import { withBasePath } from '@app/constants/app';
 
 /**
@@ -26,9 +25,6 @@ export function useNavigationUrlSync(
   useEffect(() => {
     if (!enableSync) return;
     if (hasInitialized.current) return;
-
-    const currentPath = window.location.pathname;
-    firePixel(currentPath);
 
     const route = parseToolRoute(registry);
     if (route.toolId !== selectedTool) {
@@ -65,10 +61,7 @@ export function useNavigationUrlSync(
     const handlePopState = () => {
       const route = parseToolRoute(registry);
       if (route.toolId !== selectedTool) {
-        const currentPath = window.location.pathname;
-        firePixel(currentPath);
-
-        if (route.toolId) {
+          if (route.toolId) {
           handleToolSelect(route.toolId);
         } else {
           clearToolSelection();

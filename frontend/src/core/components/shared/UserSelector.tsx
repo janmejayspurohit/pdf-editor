@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import { alert } from '@app/components/toast';
 import { UserSummary } from '@app/types/signingSession';
 import apiClient from '@app/services/apiClient';
-import { useAuth } from '@app/auth/UseSession';
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from '@app/styles/zIndex';
 
 interface UserSelectorProps {
@@ -21,7 +20,6 @@ type GroupedData = { group: string; items: SelectItem[] };
 
 const UserSelector = ({ value, onChange, placeholder, size = 'sm', disabled = false }: UserSelectorProps) => {
   const { t } = useTranslation();
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [selectData, setSelectData] = useState<GroupedData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,11 +34,9 @@ const UserSelector = ({ value, onChange, placeholder, size = 'sm', disabled = fa
 
         // Process selectData inside useEffect - group by team
         const usersByTeam: Record<string, SelectItem[]> = {};
-        const currentUserId = user?.id ? parseInt(user.id, 10) : null;
 
         fetchedUsers
           .filter((u: UserSummary) => u && u.userId && u.username)
-          .filter((u: UserSummary) => u.userId !== currentUserId) // Exclude current user
           .filter((u: UserSummary) => u.teamName?.toLowerCase() !== 'internal') // Exclude internal users
           .forEach((user: UserSummary) => {
             const teamName = user.teamName || t('certSign.collab.userSelector.noTeam', 'No Team');
@@ -78,7 +74,7 @@ const UserSelector = ({ value, onChange, placeholder, size = 'sm', disabled = fa
     };
 
     fetchUsers();
-  }, [t, user]);
+  }, [t]);
 
   // Process stringValue when value prop changes
   useEffect(() => {

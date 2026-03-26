@@ -7,8 +7,6 @@ import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useFileManager } from "@app/hooks/useFileManager";
 import { StirlingFile } from "@app/types/fileContext";
-import { PrivateContent } from "@app/components/shared/PrivateContent"
-
 export interface FileStatusIndicatorProps {
   selectedFiles?: StirlingFile[];
   minFiles?: number;
@@ -136,7 +134,7 @@ const FileStatusIndicator = ({
   return (
    <Text size="sm" c="dimmed" style={{ wordBreak: 'break-word', whiteSpace: 'normal' }}>
       ✓ {selectedFiles.length === 1
-          ? <PrivateContent>{t("fileSelected", "Selected: {{filename}}", { filename: selectedFiles[0]?.name }) }</PrivateContent>
+          ? t("fileSelected", "Selected: {{filename}}", { filename: selectedFiles[0]?.name })
           : t("filesSelected", "{{count}} files selected", { count: selectedFiles.length })}
     </Text>
   );

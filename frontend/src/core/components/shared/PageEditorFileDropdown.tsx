@@ -7,7 +7,6 @@ import AddIcon from '@mui/icons-material/Add';
 import FitText from '@app/components/shared/FitText';
 import { getFileColorWithOpacity } from '@app/components/pageEditor/fileColors';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
-import { PrivateContent } from '@app/components/shared/PrivateContent';
 import { useFileItemDragDrop } from '@app/components/shared/pageEditor/useFileItemDragDrop';
 
 import { FileId } from '@app/types/file';
@@ -126,9 +125,7 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
             size="sm"
           />
           <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
-            <PrivateContent>
-              <FitText text={itemName} minimumFontScale={0.7} />
-            </PrivateContent>
+            <FitText text={itemName} minimumFontScale={0.7} />
           </div>
           {file.versionNumber && file.versionNumber > 1 && (
             <Text size="xs" c="dimmed">

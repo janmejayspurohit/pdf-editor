@@ -162,21 +162,8 @@ public class ConfigController {
 
             // Hide disabled tools settings
             configData.put(
-                    "hideDisabledToolsGoogleDrive",
-                    applicationProperties.getUi().getHideDisabledTools().isGoogleDrive());
-            configData.put(
                     "hideDisabledToolsMobileQRScanner",
                     applicationProperties.getUi().getHideDisabledTools().isMobileQRScanner());
-
-            // Google Drive backend settings (only if enabled)
-            ApplicationProperties.Premium.ProFeatures.GoogleDrive googleDrive =
-                    applicationProperties.getPremium().getProFeatures().getGoogleDrive();
-            if (googleDrive.isEnabled()) {
-                configData.put("googleDriveEnabled", true);
-                configData.put("googleDriveClientId", googleDrive.getClientId());
-                configData.put("googleDriveApiKey", googleDrive.getApiKey());
-                configData.put("googleDriveAppId", googleDrive.getAppId());
-            }
 
             // Security settings
             // enableLogin requires both the config flag AND proprietary features to be loaded
@@ -188,16 +175,6 @@ public class ConfigController {
             configData.put(
                     "showSettingsWhenNoLogin",
                     applicationProperties.getSystem().isShowSettingsWhenNoLogin());
-
-            // SSO Provider settings
-            boolean enableOAuth =
-                    applicationProperties.getSecurity().getOauth2() != null
-                            && applicationProperties.getSecurity().getOauth2().getEnabled();
-            boolean enableSaml =
-                    applicationProperties.getSecurity().getSaml2() != null
-                            && applicationProperties.getSecurity().getSaml2().getEnabled();
-            configData.put("enableOAuth", enableOAuth);
-            configData.put("enableSaml", enableSaml);
 
             // Mail settings - check both SMTP enabled AND invites enabled
             boolean smtpEnabled = applicationProperties.getMail().isEnabled();

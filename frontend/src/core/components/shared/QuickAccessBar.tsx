@@ -514,7 +514,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
           color={buttonStyle.color}
           component={navProps ? 'a' : 'button'}
           dataTestId={`${config.id}-button`}
-          dataTour={`${config.id}-button`}
         />
       </div>
     );
@@ -606,7 +605,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     <div
       ref={ref}
       data-sidebar="quick-access"
-      data-tour="quick-access-bar"
       className={`h-screen flex flex-col w-16 quick-access-bar-main ${isRainbowMode ? 'rainbow-mode' : ''}`}
     >
       {/* Fixed header outside scrollable area */}

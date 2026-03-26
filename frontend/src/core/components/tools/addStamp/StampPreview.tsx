@@ -4,8 +4,6 @@ import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
 import { useThumbnailGeneration } from '@app/hooks/useThumbnailGeneration';
 import { A4_ASPECT_RATIO, getFirstSelectedPage, getFontFamily, computeStampPreviewStyle, getAlphabetPreviewScale } from '@app/components/tools/addStamp/StampPreviewUtils';
 import styles from '@app/components/tools/addStamp/StampPreview.module.css';
-import {PrivateContent} from "@app/components/shared/PrivateContent";
-
 type Props = {
   parameters: AddStampParameters;
   onParameterChange: <K extends keyof AddStampParameters>(key: K, value: AddStampParameters[K]) => void;
@@ -264,14 +262,12 @@ export default function StampPreview({ parameters, onParameterChange, file, show
         onPointerUp={handlePointerUp}
       >
         {pageThumbnail && (
-          <PrivateContent>
-            <img
-              src={pageThumbnail}
-              alt="page preview"
-              className={styles.pageThumbnail}
-              draggable={false}
-            />
-          </PrivateContent>
+          <img
+            src={pageThumbnail}
+            alt="page preview"
+            className={styles.pageThumbnail}
+            draggable={false}
+          />
         )}
         {parameters.stampType === 'text' && (
           <div

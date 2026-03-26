@@ -49,12 +49,7 @@ export interface AppConfig {
   storageShareLinksEnabled?: boolean;
   storageShareEmailEnabled?: boolean;
   storageGroupSigningEnabled?: boolean;
-  hideDisabledToolsGoogleDrive?: boolean;
   hideDisabledToolsMobileQRScanner?: boolean;
-  googleDriveEnabled?: boolean;
-  googleDriveClientId?: string;
-  googleDriveApiKey?: string;
-  googleDriveAppId?: string;
   timestampDefaultTsaUrl?: string;
   timestampCustomTsaUrls?: string[];
   timestampTsaPresets?: { label: string; url: string }[];

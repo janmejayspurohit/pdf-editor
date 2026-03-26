@@ -27,7 +27,6 @@ import ToolChain from '@app/components/shared/ToolChain';
 import HoverActionMenu, { HoverAction } from '@app/components/shared/HoverActionMenu';
 import { downloadFile } from '@app/services/downloadService';
 import FileEditorFileName from '@app/components/fileEditor/FileEditorFileName';
-import { PrivateContent } from '@app/components/shared/PrivateContent';
 import UploadToServerModal from '@app/components/shared/UploadToServerModal';
 import ShareFileModal from '@app/components/shared/ShareFileModal';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
@@ -365,7 +364,6 @@ const FileEditorThumbnail = ({
       ref={fileElementRef}
       data-file-id={file.id}
       data-testid="file-thumbnail"
-      data-tour="file-card-checkbox"
       data-selected={isSelected}
       data-supported={isSupported}
       className={`${styles.card} w-[18rem] h-[22rem] select-none flex flex-col shadow-sm transition-all relative`}
@@ -432,7 +430,6 @@ const FileEditorThumbnail = ({
               aria-label={isPinned ? t('unpin', 'Unpin File (replace after tool run)') : t('pin', 'Pin File (keep active after tool run)')}
               variant="subtle"
               className={isPinned ? styles.pinned : styles.headerIconButton}
-              data-tour="file-card-pin"
               onClick={(e) => {
                 e.stopPropagation();
                 if (actualFile) {
@@ -486,20 +483,19 @@ const FileEditorThumbnail = ({
       >
         <div className={styles.previewPaper}>
           {file.thumbnailUrl ? (
-            <PrivateContent>
-              <img
-                src={file.thumbnailUrl}
-                alt={file.name}
-                draggable={false}
-                loading="lazy"
-                decoding="async"
-                onError={(e) => {
-                  const img = e.currentTarget;
-                  img.style.display = 'none';
-                  img.parentElement?.setAttribute('data-thumb-missing', 'true');
-                }}
-                style={{
-                  maxWidth: '80%',
+            <img
+              src={file.thumbnailUrl}
+              alt={file.name}
+              draggable={false}
+              loading="lazy"
+              decoding="async"
+              onError={(e) => {
+                const img = e.currentTarget;
+                img.style.display = 'none';
+                img.parentElement?.setAttribute('data-thumb-missing', 'true');
+              }}
+              style={{
+                maxWidth: '80%',
                 maxHeight: '80%',
                 objectFit: 'contain',
                 borderRadius: 0,
@@ -511,7 +507,6 @@ const FileEditorThumbnail = ({
                 alignSelf: 'start'
               }}
             />
-            </PrivateContent>
           ) : file.type?.startsWith('application/pdf') ? (
             <Stack align="center" justify="center" gap="xs" style={{ height: '100%' }}>
               <Loader size="sm" />

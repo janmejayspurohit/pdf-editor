@@ -190,7 +190,6 @@ const TopControls = ({
       <div className="flex justify-center">
 
         <SegmentedControl
-          data-tour="view-switcher"
           data={viewOptions}
 
           value={currentView}

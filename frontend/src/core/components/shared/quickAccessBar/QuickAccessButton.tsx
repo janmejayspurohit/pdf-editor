@@ -16,7 +16,6 @@ interface QuickAccessButtonProps {
   className?: string;
   component?: 'a' | 'button';
   dataTestId?: string;
-  dataTour?: string;
   disabled?: boolean;
 }
 
@@ -34,7 +33,6 @@ const QuickAccessButton: React.FC<QuickAccessButtonProps> = ({
   className,
   component = 'button',
   dataTestId,
-  dataTour,
   disabled = false,
 }) => {
   const buttonSize = size || (isActive ? 'lg' : 'md');
@@ -54,7 +52,7 @@ const QuickAccessButton: React.FC<QuickAccessButtonProps> = ({
       };
 
   return (
-    <div className="flex flex-col items-center gap-1" data-tour={dataTour}>
+    <div className="flex flex-col items-center gap-1">
       <ActionIcon
         {...actionIconProps}
         size={buttonSize}

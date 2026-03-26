@@ -3,8 +3,6 @@ import { createPluginRegistration } from '@embedpdf/core';
 import type { PluginRegistry } from '@embedpdf/core';
 import { EmbedPDF } from '@embedpdf/core/react';
 import { usePdfiumEngine } from '@embedpdf/engines/react';
-import { PrivateContent } from '@app/components/shared/PrivateContent';
-
 // Import the essential plugins
 import { Viewport, ViewportPluginPackage } from '@embedpdf/plugin-viewport/react';
 import { Scroller, ScrollPluginPackage } from '@embedpdf/plugin-scroll/react';
@@ -263,11 +261,9 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
           <Text c="dimmed" size="sm" style={{ textAlign: 'center', maxWidth: '400px' }}>
             {t('viewer.onlyPdfSupported')}
           </Text>
-          <PrivateContent>
-            <Text c="dimmed" size="xs" style={{ fontFamily: 'monospace' }}>
-              {fileName}
-            </Text>
-          </PrivateContent>
+          <Text c="dimmed" size="xs" style={{ fontFamily: 'monospace' }}>
+            {fileName}
+          </Text>
         </Stack>
       </Center>
     );
@@ -292,8 +288,7 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
 
   // Wrap your UI with the <EmbedPDF> provider
   return (
-    <PrivateContent>
-      <div
+    <div
         style={{
           height: '100%',
           width: '100%',
@@ -886,6 +881,5 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
         </ActiveDocumentProvider>
       </EmbedPDF>
       </div>
-    </PrivateContent>
   );
 }

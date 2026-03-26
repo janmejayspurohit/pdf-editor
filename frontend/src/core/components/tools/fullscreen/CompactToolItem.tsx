@@ -41,7 +41,7 @@ const CompactToolItem: React.FC<CompactToolItemProps> = ({ id, tool, isSelected,
       onClick={onClick}
       aria-disabled={disabled}
       disabled={disabled}
-      data-tour={`tool-button-${id}`}
+     
     >
       {tool.icon ? (
         <span

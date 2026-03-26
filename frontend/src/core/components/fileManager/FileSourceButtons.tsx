@@ -4,7 +4,6 @@ import HistoryIcon from '@mui/icons-material/History';
 import PhonelinkIcon from '@mui/icons-material/Phonelink';
 import { useTranslation } from 'react-i18next';
 import { useFileManagerContext } from '@app/contexts/FileManagerContext';
-import { useGoogleDrivePicker } from '@app/hooks/useGoogleDrivePicker';
 import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
 import { useFileActionIcons } from '@app/hooks/useFileActionIcons';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
@@ -15,29 +14,11 @@ interface FileSourceButtonsProps {
   horizontal?: boolean;
 }
 
-/**
- * Google Drive icon component - displays the branded SVG icon
- * Shows grayscale when disabled
- */
-const GoogleDriveIcon: React.FC<{ disabled?: boolean }> = ({ disabled }) => (
-  <img
-    src="/images/google-drive.svg"
-    alt="Google Drive"
-    style={{
-      width: '20px',
-      height: '20px',
-      opacity: disabled ? 0.5 : 1,
-      filter: disabled ? 'grayscale(100%)' : 'none',
-    }}
-  />
-);
-
 const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
   horizontal = false
 }) => {
-  const { activeSource, onSourceChange, onLocalFileClick, onGoogleDriveSelect, onNewFilesSelect } = useFileManagerContext();
+  const { activeSource, onSourceChange, onLocalFileClick, onNewFilesSelect } = useFileManagerContext();
   const { t } = useTranslation();
-  const { isEnabled: isGoogleDriveEnabled, openPicker: openGoogleDrivePicker } = useGoogleDrivePicker();
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
   const UploadIcon = icons.upload;
@@ -45,17 +26,6 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
   const { config } = useAppConfig();
   const isMobile = useIsMobile();
   const isMobileUploadEnabled = config?.enableMobileScanner && !isMobile;
-
-  const handleGoogleDriveClick = async () => {
-    try {
-      const files = await openGoogleDrivePicker({ multiple: true });
-      if (files.length > 0) {
-        onGoogleDriveSelect(files);
-      }
-    } catch (error) {
-      console.error('Failed to pick files from Google Drive:', error);
-    }
-  };
 
   const handleMobileUploadClick = () => {
     setMobileUploadModalOpen(true);
@@ -66,9 +36,6 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
       onNewFilesSelect(files);
     }
   };
-
-  // Determine visibility of Google Drive button
-  const shouldHideGoogleDrive = !isGoogleDriveEnabled && config?.hideDisabledToolsGoogleDrive;
 
   // Determine visibility of Mobile QR Scanner button
   const shouldHideMobileQR = !isMobileUploadEnabled && config?.hideDisabledToolsMobileQRScanner;
@@ -122,31 +89,6 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
       >
         {horizontal ? terminology.upload : terminology.uploadFiles}
       </Button>
-
-      {!shouldHideGoogleDrive && (
-        <Button
-          variant="subtle"
-          color='var(--mantine-color-gray-6)'
-          leftSection={<GoogleDriveIcon disabled={!isGoogleDriveEnabled} />}
-          justify={horizontal ? "center" : "flex-start"}
-          onClick={handleGoogleDriveClick}
-          fullWidth={!horizontal}
-          size={horizontal ? "xs" : "sm"}
-          disabled={!isGoogleDriveEnabled}
-          styles={{
-            root: {
-              backgroundColor: 'transparent',
-              border: 'none',
-              '&:hover': {
-                backgroundColor: isGoogleDriveEnabled ? 'var(--mantine-color-gray-0)' : 'transparent'
-              }
-            }
-          }}
-          title={!isGoogleDriveEnabled ? t('fileManager.googleDriveNotAvailable', 'Google Drive integration not available') : undefined}
-        >
-          {horizontal ? t('fileManager.googleDriveShort', 'Drive') : t('fileManager.googleDrive', 'Google Drive')}
-        </Button>
-      )}
 
       {!shouldHideMobileQR && (
         <Button

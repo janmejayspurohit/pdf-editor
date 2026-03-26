@@ -55,7 +55,6 @@ interface FileManagerContextValue {
   onUnzipFile: (file: StirlingFileStub) => Promise<void>;
   onMakeCopy: (file: StirlingFileStub) => Promise<void>;
   onNewFilesSelect: (files: File[]) => void;
-  onGoogleDriveSelect: (files: File[]) => void;
   refreshRecentFiles: () => Promise<void>;
 
   // External props
@@ -724,19 +723,6 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
   }, [refreshRecentFiles]);
 
-  const handleGoogleDriveSelect = useCallback(async (files: File[]) => {
-    if (files.length > 0) {
-      try {
-        // Process Google Drive files same as local files
-        onNewFilesSelect(files);
-        await refreshRecentFiles();
-        onClose();
-      } catch (error) {
-        console.error('Failed to process Google Drive files:', error);
-      }
-    }
-  }, [onNewFilesSelect, refreshRecentFiles, onClose]);
-
   const handleUnzipFile = useCallback(async (file: StirlingFileStub) => {
     try {
       // Load the full file from storage
@@ -873,7 +859,6 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     onUnzipFile: handleUnzipFile,
     onMakeCopy: handleMakeCopy,
     onNewFilesSelect,
-    onGoogleDriveSelect: handleGoogleDriveSelect,
     refreshRecentFiles,
 
     // External props
@@ -912,7 +897,6 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     handleUnzipFile,
     handleMakeCopy,
     onNewFilesSelect,
-    handleGoogleDriveSelect,
     recentFiles,
     isFileSupported,
     modalHeight,

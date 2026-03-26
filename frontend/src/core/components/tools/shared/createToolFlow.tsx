@@ -137,7 +137,7 @@ export function createToolFlow<TParams = unknown>(config: ToolFlowConfig<TParams
               submitText={eb.text}
               showCloudBadge={eb.showCloudBadge ?? config.review.operation.willUseCloud ?? false}
               data-testid={eb.testId}
-              data-tour="run-button"
+             
             />
           );
         })()}

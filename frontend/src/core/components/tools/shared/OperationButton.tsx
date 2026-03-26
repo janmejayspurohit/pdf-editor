@@ -20,7 +20,6 @@ export interface OperationButtonProps {
   type?: 'button' | 'submit' | 'reset';
   showCloudBadge?: boolean;
   'data-testid'?: string;
-  'data-tour'?: string;
 }
 
 const OperationButton = ({
@@ -37,7 +36,6 @@ const OperationButton = ({
   type = 'button',
   showCloudBadge = false,
   'data-testid': dataTestId,
-  'data-tour': dataTour
 }: OperationButtonProps) => {
   const { t } = useTranslation();
   const { isOnline, message: backendMessage } = useBackendHealth();
@@ -72,7 +70,6 @@ const OperationButton = ({
       variant={variant}
       color={color}
       data-testid={dataTestId}
-      data-tour={dataTour}
       style={{ minHeight: '2.5rem', position: 'relative' }}
     >
       {isLoading

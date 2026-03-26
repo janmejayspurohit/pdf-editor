@@ -214,7 +214,7 @@ export default function RightRail() {
       <div className="right-rail-inner">
         {sectionsWithButtons.map(({ section, buttons: sectionButtons }) => (
           <React.Fragment key={section}>
-            <div className="right-rail-section" data-tour="right-rail-controls">
+            <div className="right-rail-section">
               {sectionButtons.map((btn, index) => {
                 const content = renderButton(btn);
                 if (!content) return null;
@@ -232,7 +232,7 @@ export default function RightRail() {
             <Divider className="right-rail-divider" />
           </React.Fragment>
         ))}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }} data-tour="right-rail-settings">
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
           <LanguageSelector
             position="left-start"
             offset={6}

@@ -3,16 +3,10 @@ package stirling.software.common.model;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
+
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -20,8 +14,6 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.PropertySource;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.stereotype.Component;
@@ -40,11 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.configuration.YamlPropertySourceFactory;
 import stirling.software.common.constants.JwtConstants;
-import stirling.software.common.model.exception.UnsupportedProviderException;
-import stirling.software.common.model.oauth2.GitHubProvider;
-import stirling.software.common.model.oauth2.GoogleProvider;
-import stirling.software.common.model.oauth2.KeycloakProvider;
-import stirling.software.common.model.oauth2.Provider;
+
 import stirling.software.common.service.SsrfProtectionService.SsrfProtectionLevel;
 import stirling.software.common.util.ValidationUtils;
 
@@ -244,8 +232,6 @@ public class ApplicationProperties {
     public static class Security {
         private boolean enableLogin;
         private InitialLogin initialLogin = new InitialLogin();
-        private OAUTH2 oauth2 = new OAUTH2();
-        private SAML2 saml2 = new SAML2();
         private int loginAttemptCount;
         private long loginResetTimeMinutes;
         private String loginMethod = "all";
@@ -255,15 +241,9 @@ public class ApplicationProperties {
         private Timestamp timestamp = new Timestamp();
         private String xFrameOptions = "DENY";
 
-        public Boolean isAltLogin() {
-            return saml2.getEnabled() || oauth2.getEnabled();
-        }
-
         public enum LoginMethods {
             ALL("all"),
-            NORMAL("normal"),
-            OAUTH2("oauth2"),
-            SAML2("saml2");
+            NORMAL("normal");
 
             private String method;
 
@@ -282,156 +262,10 @@ public class ApplicationProperties {
                     || loginMethod.equalsIgnoreCase(LoginMethods.ALL.toString()));
         }
 
-        public boolean isOauth2Active() {
-            return (oauth2 != null
-                    && oauth2.getEnabled()
-                    && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
-        }
-
-        public boolean isSaml2Active() {
-            return (saml2 != null
-                    && saml2.getEnabled()
-                    && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
-        }
-
         @Data
         public static class InitialLogin {
             private String username;
             @ToString.Exclude private String password;
-        }
-
-        @Getter
-        @Setter
-        @ToString
-        public static class SAML2 {
-            private String provider;
-            private Boolean enabled = false;
-            private Boolean autoCreateUser = false;
-            private Boolean blockRegistration = false;
-            private String registrationId = "stirling";
-
-            @ToString.Exclude
-            @JsonProperty("idpMetadataUri")
-            private String idpMetadataUri;
-
-            private String idpSingleLogoutUrl;
-            private String idpSingleLoginUrl;
-            private String idpIssuer;
-
-            @JsonProperty("idpCert")
-            private String idpCert;
-
-            @ToString.Exclude
-            @JsonProperty("privateKey")
-            private String privateKey;
-
-            @ToString.Exclude
-            @JsonProperty("spCert")
-            private String spCert;
-
-            @JsonIgnore
-            public InputStream getIdpMetadataUri() throws IOException {
-                if (idpMetadataUri.startsWith("classpath:")) {
-                    return new ClassPathResource(idpMetadataUri.substring("classpath:".length()))
-                            .getInputStream();
-                }
-                try {
-                    URI uri = new URI(idpMetadataUri);
-                    URL url = uri.toURL();
-                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                    connection.setRequestMethod("GET");
-                    return connection.getInputStream();
-                } catch (URISyntaxException e) {
-                    throw new IOException("Invalid URI format: " + idpMetadataUri, e);
-                }
-            }
-
-            @JsonIgnore
-            public Resource getSpCert() {
-                if (spCert == null) return null;
-                if (spCert.startsWith("classpath:")) {
-                    return new ClassPathResource(spCert.substring("classpath:".length()));
-                } else {
-                    return new FileSystemResource(spCert);
-                }
-            }
-
-            @JsonIgnore
-            public Resource getIdpCert() {
-                if (idpCert == null) return null;
-                if (idpCert.startsWith("classpath:")) {
-                    return new ClassPathResource(idpCert.substring("classpath:".length()));
-                } else {
-                    return new FileSystemResource(idpCert);
-                }
-            }
-
-            @JsonIgnore
-            public Resource getPrivateKey() {
-                if (privateKey == null) return null;
-                if (privateKey.startsWith("classpath:")) {
-                    return new ClassPathResource(privateKey.substring("classpath:".length()));
-                } else {
-                    return new FileSystemResource(privateKey);
-                }
-            }
-        }
-
-        @Data
-        public static class OAUTH2 {
-            private Boolean enabled = false;
-            private String issuer;
-            private String clientId;
-            @ToString.Exclude private String clientSecret;
-            private Boolean autoCreateUser = false;
-            private Boolean blockRegistration = false;
-            private String useAsUsername;
-            private Collection<String> scopes = new ArrayList<>();
-            private String provider;
-            private Client client = new Client();
-
-            public void setScopes(String scopes) {
-                List<String> scopesList =
-                        Arrays.stream(scopes.split(",")).map(String::trim).toList();
-                this.scopes.addAll(scopesList);
-            }
-
-            protected boolean isValid(String value, String name) {
-                return value != null && !value.trim().isEmpty();
-            }
-
-            protected boolean isValid(Collection<String> value, String name) {
-                return value != null && !value.isEmpty();
-            }
-
-            public boolean isSettingsValid() {
-                return !ValidationUtils.isStringEmpty(this.issuer)
-                        && !ValidationUtils.isStringEmpty(this.clientId)
-                        && !ValidationUtils.isStringEmpty(this.clientSecret)
-                        && !ValidationUtils.isCollectionEmpty(this.scopes)
-                        && !ValidationUtils.isStringEmpty(this.useAsUsername);
-            }
-
-            @Data
-            public static class Client {
-                private GoogleProvider google = new GoogleProvider();
-                private GitHubProvider github = new GitHubProvider();
-                private KeycloakProvider keycloak = new KeycloakProvider();
-
-                public Provider get(String registrationId) throws UnsupportedProviderException {
-                    return switch (registrationId.toLowerCase(Locale.ROOT)) {
-                        case "google" -> getGoogle();
-                        case "github" -> getGithub();
-                        case "keycloak" -> getKeycloak();
-                        default ->
-                                throw new UnsupportedProviderException(
-                                        "Logout from the provider "
-                                                + registrationId
-                                                + " is not supported. Report it at"
-                                                + " https://github.com/Stirling-Tools/Stirling-PDF/issues");
-                    };
-                }
-            }
         }
 
         /**
@@ -809,7 +643,6 @@ public class ApplicationProperties {
 
         @Data
         public static class HideDisabledTools {
-            private boolean googleDrive = false;
             private boolean mobileQRScanner = false;
         }
     }
@@ -999,15 +832,6 @@ public class ApplicationProperties {
             private boolean ssoAutoLogin;
             private boolean database;
             private CustomMetadata customMetadata = new CustomMetadata();
-            private GoogleDrive googleDrive = new GoogleDrive();
-
-            @Data
-            public static class GoogleDrive {
-                private boolean enabled = false;
-                private String clientId = "";
-                private String apiKey = "";
-                private String appId = "";
-            }
 
             @Data
             public static class CustomMetadata {

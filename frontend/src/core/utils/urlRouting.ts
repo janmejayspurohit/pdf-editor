@@ -6,7 +6,6 @@ import { ToolRoute } from '@app/types/navigation';
 import { ToolId, isValidToolId } from '@app/types/toolId';
 import { getDefaultWorkbench } from '@app/types/workbench';
 import { ToolRegistry, getToolWorkbench, getToolUrlPath } from '@app/data/toolsTaxonomy';
-import { firePixel } from '@app/utils/scarfTracking';
 import { URL_TO_TOOL_MAP } from '@app/utils/urlMapping';
 import { BASE_PATH, withBasePath } from '@app/constants/app';
 
@@ -74,7 +73,6 @@ function updateUrl(newPath: string, searchParams: URLSearchParams, replace: bool
     } else {
       window.history.pushState(null, '', fullUrl);
     }
-    firePixel(newPath);
   }
 }
 

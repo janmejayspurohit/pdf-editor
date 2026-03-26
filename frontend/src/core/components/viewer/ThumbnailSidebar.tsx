@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Box, ScrollArea } from '@mantine/core';
 import { useViewer } from '@app/contexts/ViewerContext';
-import { PrivateContent } from '@app/components/shared/PrivateContent';
-
 interface ThumbnailSidebarProps {
   visible: boolean;
   onToggle: () => void;
@@ -193,19 +191,17 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle, activeFileIndex
                   >
                     {/* Thumbnail Image */}
                     {thumbnails[pageIndex] && thumbnails[pageIndex] !== 'error' ? (
-                      <PrivateContent>
-                        <img
-                          src={thumbnails[pageIndex]}
-                          alt={`Page ${pageIndex + 1} thumbnail`}
-                          style={{
-                            maxWidth: '100%',
-                            height: 'auto',
-                            borderRadius: '4px',
-                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                            border: '1px solid var(--border-subtle)'
-                          }}
-                        />
-                      </PrivateContent>
+                      <img
+                        src={thumbnails[pageIndex]}
+                        alt={`Page ${pageIndex + 1} thumbnail`}
+                        style={{
+                          maxWidth: '100%',
+                          height: 'auto',
+                          borderRadius: '4px',
+                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                          border: '1px solid var(--border-subtle)'
+                        }}
+                      />
                     ) : thumbnails[pageIndex] === 'error' ? (
                       <div style={{
                         width: '11.5rem',
