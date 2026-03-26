@@ -103,8 +103,8 @@ telegram:
       processing: true # set to 'false' to hide/suppress processing messages to users (to avoid spam)
 
 legal:
-  termsAndConditions: https://www.stirling.com/legal/terms-of-service # URL to the terms and conditions of your application (e.g. https://example.com/terms). Empty string to disable or filename to load from local file in static folder
-  privacyPolicy: https://www.stirling.com/legal/privacy-policy # URL to the privacy policy of your application (e.g. https://example.com/privacy). Empty string to disable or filename to load from local file in static folder
+  termsAndConditions: "" # URL to the terms and conditions of your application (e.g. https://example.com/terms). Empty string to disable or filename to load from local file in static folder
+  privacyPolicy: "" # URL to the privacy policy of your application (e.g. https://example.com/privacy). Empty string to disable or filename to load from local file in static folder
   accessibilityStatement: "" # URL to the accessibility statement of your application (e.g. https://example.com/accessibility). Empty string to disable or filename to load from local file in static folder
   cookiePolicy: "" # URL to the cookie policy of your application (e.g. https://example.com/cookie). Empty string to disable or filename to load from local file in static folder
   impressum: "" # URL to the impressum of your application (e.g. https://example.com/impressum). Empty string to disable or filename to load from local file in static folder
@@ -118,10 +118,9 @@ system:
   showSettingsWhenNoLogin: true # set to 'false' to hide settings button when login is disabled (enableLogin: false). Only applies when login is disabled.
   customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template HTML files
   tessdataDir: "" # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
-  enableAnalytics: null # Master toggle for analytics: set to 'true' to enable all analytics, 'false' to disable all analytics, or leave as 'null' to prompt admin on first launch
-  enableDesktopInstallSlide: true # Set to 'false' to hide the desktop app installation slide in the onboarding flow
-  enablePosthog: null # Enable PostHog analytics (open-source product analytics): set to 'true' to enable, 'false' to disable, or 'null' to enable by default when analytics is enabled
-  enableScarf: null # Enable Scarf tracking pixel: set to 'true' to enable, 'false' to disable, or 'null' to enable by default when analytics is enabled
+  enableAnalytics: false # Master toggle for analytics
+  enablePosthog: false # Enable PostHog analytics
+  enableScarf: false # Enable Scarf tracking pixel
   enableUrlToPDF: false # Set to 'true' to enable URL to PDF, INTERNAL ONLY, known security issues, should not be used externally
   disableSanitize: false # set to true to disable Sanitize HTML; (can lead to injections in HTML)
   maxDPI: 500 # Maximum allowed DPI for PDF to image conversion
@@ -135,8 +134,8 @@ system:
     pageFormat: A4 # Page format for converted PDFs: 'keep' (original image dimensions), 'A4' (A4 page size), or 'letter' (US Letter page size). Only applies when convertToPdf is true.
     stretchToFit: false # Whether to stretch images to fill the entire page (may distort aspect ratio). If false, images are centered with preserved aspect ratio. Only applies when convertToPdf is true.
   serverCertificate:
-    enabled: true # Enable server-side certificate for "Sign with Stirling-PDF" option
-    organizationName: Stirling-PDF # Organization name for generated certificates
+    enabled: true # Enable server-side certificate for signing
+    organizationName: PDF Editor # Organization name for generated certificates
     validity: 365 # Certificate validity in days
     regenerateOnStartup: false # Generate new certificate on each startup
   html:
