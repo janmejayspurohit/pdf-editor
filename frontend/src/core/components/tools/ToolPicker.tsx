@@ -5,11 +5,9 @@ import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import "@app/components/tools/toolPicker/ToolPicker.css";
 import { useToolSections } from "@app/hooks/useToolSections";
 import type { SubcategoryGroup } from "@app/hooks/useToolSections";
-import { useFavoriteToolItems } from "@app/hooks/tools/useFavoriteToolItems";
 import NoToolsFound from "@app/components/tools/shared/NoToolsFound";
 import { renderToolButtons } from "@app/components/tools/shared/renderToolButtons";
 import ToolButton from "@app/components/tools/toolPicker/ToolButton";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { ToolId } from "@app/types/toolId";
 import { getSubcategoryLabel } from "@app/data/toolsTaxonomy";
 import { ToolPickerFooterExtensions } from "@app/components/tools/toolPicker/ToolPickerFooterExtensions";
@@ -27,9 +25,6 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
   const scrollableRef = useRef<HTMLDivElement>(null);
 
   const { sections: visibleSections } = useToolSections(filteredTools);
-  const { favoriteTools, toolRegistry } = useToolWorkflow();
-
-  const favoriteToolItems = useFavoriteToolItems(favoriteTools, toolRegistry);
 
   const quickSection = useMemo(
     () => visibleSections.find(s => s.key === 'quick'),
@@ -94,27 +89,8 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
           </Stack>
         ) : (
           <>
-        {/* Flat list: favorites and recommended first, then all subcategories */}
+        {/* Flat list: recommended first, then all subcategories */}
         <Stack p="sm" gap="xs">
-          {favoriteToolItems.length > 0 && (
-            <Box w="100%">
-              <div style={headerTextStyle}>
-                {t('toolPanel.fullscreen.favorites', 'Favourites')}
-              </div>
-              <div>
-                {favoriteToolItems.map(({ id, tool }) => (
-                  <ToolButton
-                    key={`fav-${id}`}
-                    id={id}
-                    tool={tool}
-                    isSelected={selectedToolKey === id}
-                    onSelect={onSelect}
-                    hasStars
-                  />
-                ))}
-              </div>
-            </Box>
-          )}
           {recommendedItems.length > 0 && (
             <Box w="100%">
               <div style={headerTextStyle}>
@@ -128,7 +104,6 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
                     tool={tool}
                     isSelected={selectedToolKey === id}
                     onSelect={onSelect}
-                    hasStars
                   />
                 ))}
               </div>

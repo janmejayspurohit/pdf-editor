@@ -13,8 +13,6 @@ import { RightRailProvider } from "@app/contexts/RightRailContext";
 import { ViewerProvider } from "@app/contexts/ViewerContext";
 import { SignatureProvider } from "@app/contexts/SignatureContext";
 import { AnnotationProvider } from "@app/contexts/AnnotationContext";
-import { TourOrchestrationProvider } from "@app/contexts/TourOrchestrationContext";
-import { AdminTourOrchestrationProvider } from "@app/contexts/AdminTourOrchestrationContext";
 import { PageEditorProvider } from "@app/contexts/PageEditorContext";
 import { BannerProvider } from "@app/contexts/BannerContext";
 import ErrorBoundary from "@app/components/shared/ErrorBoundary";
@@ -121,11 +119,7 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                                       <FormFillProvider>
                                       <AnnotationProvider>
                                         <RightRailProvider>
-                                          <TourOrchestrationProvider>
-                                            <AdminTourOrchestrationProvider>
-                                              {children}
-                                            </AdminTourOrchestrationProvider>
-                                          </TourOrchestrationProvider>
+                                          {children}
                                         </RightRailProvider>
                                       </AnnotationProvider>
                                       </FormFillProvider>

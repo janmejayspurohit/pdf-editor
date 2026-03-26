@@ -81,7 +81,6 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   // Image and visual tools
   '/extract-images': 'extractImages',
   '/adjust-contrast': 'adjustContrast',
-  '/fake-scan': 'scannerEffect',
   '/replace-color-pdf': 'replaceColor',
 
   // Metadata and info
@@ -95,7 +94,6 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   '/auto-rename': 'autoRename',
   '/compare': 'compare',
   '/multi-tool': 'multiTool',
-  '/show-js': 'showJS',
 
   // Special/utility tools
   '/read': 'read',
@@ -103,12 +101,6 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   '/sign': 'sign',
   '/add-text': 'addText',
   '/pdf-text-editor': 'pdfTextEditor',
-
-  // Developer tools
-  '/dev-api': 'devApi',
-  '/dev-folder-scanning': 'devFolderScanning',
-  '/dev-sso-guide': 'devSsoGuide',
-  '/dev-airgapped': 'devAirgapped',
 
   // Legacy URL mappings from sitemap
   '/pdf-organizer': 'reorganizePages',
@@ -127,8 +119,6 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   '/replace-and-invert-color-pdf': 'replaceColor',
   '/pipeline': 'automate',
   '/extract-image-scans': 'scannerImageSplit',
-  '/show-javascript': 'showJS',
-  '/scanner-effect': 'scannerEffect',
   '/split-by-size-or-count': 'split',
   '/overlay-pdf': 'overlayPdfs',
   '/split-pdf-by-sections': 'split',

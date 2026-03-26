@@ -23,10 +23,9 @@ plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
 
-rootProject.name = 'Stirling PDF'
+rootProject.name = 'PDF Editor'
 
-include 'stirling-pdf', 'common', 'proprietary'
+include 'pdf-editor', 'common'
 
-project(':stirling-pdf').projectDir = file('app/core')
+project(':pdf-editor').projectDir = file('app/core')
 project(':common'      ).projectDir = file('app/common')
-project(':proprietary' ).projectDir = file('app/proprietary')

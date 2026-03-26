@@ -23,18 +23,24 @@ ENV JDK_JAVA_OPTIONS="--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNN
 
 WORKDIR /app
 
+# Copy dependency specs first so Docker layer cache is reused when only source changes
 COPY build.gradle settings.gradle gradlew ./
 COPY gradle/                               gradle/
 COPY app/core/build.gradle                  app/core/
 COPY app/common/build.gradle                app/common/
-COPY app/proprietary/build.gradle           app/proprietary/
+COPY frontend/package*.json                 frontend/
 
-# Use system gradle instead of gradlew to avoid SSL issues downloading gradle distribution on emulated arm64
-RUN gradle dependencies --no-daemon || true
+# Pre-fetch all Gradle and npm dependencies — cached on host, skipped on subsequent builds
+RUN --mount=type=cache,target=/root/.gradle \
+    --mount=type=cache,target=/root/.npm \
+    gradle dependencies --no-daemon || true && \
+    cd frontend && npm ci --cache /root/.npm || true
 
 COPY . .
 
-RUN DISABLE_ADDITIONAL_FEATURES=false \
+RUN --mount=type=cache,target=/root/.gradle \
+    --mount=type=cache,target=/root/.npm \
+    DISABLE_ADDITIONAL_FEATURES=false \
     gradle clean build \
       -PbuildWithFrontend=true \
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \
@@ -73,8 +79,7 @@ RUN set -eux; \
     ln -s /logs /app/logs; \
     ln -s /configs /app/configs; \
     ln -s /customFiles /app/customFiles; \
-    ln -s /pipeline /app/pipeline; \
-    chown -h stirlingpdfuser:stirlingpdfgroup /app/logs /app/configs /app/customFiles /app/pipeline; \
+    chown -h stirlingpdfuser:stirlingpdfgroup /app/logs /app/configs /app/customFiles; \
     chown stirlingpdfuser:stirlingpdfgroup /app; \
     chmod 750 /tmp/stirling-pdf; \
     chmod 750 /tmp/stirling-pdf/heap_dumps; \

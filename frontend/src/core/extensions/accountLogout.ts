@@ -13,7 +13,7 @@ export function useAccountLogout() {
   return async ({ signOut, redirectToLogin }: AccountLogoutDeps): Promise<void> => {
     try {
       if (typeof window !== 'undefined') {
-        window.sessionStorage.setItem('stirling_sso_auto_login_logged_out', '1');
+        window.sessionStorage.setItem('pdf_editor_sso_auto_login_logged_out', '1');
       }
       await signOut();
     } finally {

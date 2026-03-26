@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useTranslation } from "react-i18next";
-import { devApiLink } from "@app/constants/links";
 import SplitPdfPanel from "@app/tools/Split";
 import CompressPdfPanel from "@app/tools/Compress";
 import OCRPanel from "@app/tools/OCR";
@@ -133,7 +132,6 @@ import RemoveBlanksSettings from "@app/components/tools/removeBlanks/RemoveBlank
 import AddPageNumbersAutomationSettings from "@app/components/tools/addPageNumbers/AddPageNumbersAutomationSettings";
 import OverlayPdfsSettings from "@app/components/tools/overlayPdfs/OverlayPdfsSettings";
 import ValidateSignature from "@app/tools/ValidateSignature";
-import ShowJS from "@app/tools/ShowJS";
 import Automate from "@app/tools/Automate";
 import Compare from "@app/tools/Compare";
 import { CONVERT_SUPPORTED_FORMATS } from "@app/constants/convertSupportedFornats";
@@ -172,7 +170,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "pdfTextEditor"),
         supportsAutomate: false,
         automationSettings: null,
-        versionStatus: "alpha",
       },
       multiTool: {
         icon: <LocalIcon icon="dashboard-customize-rounded" width="1.5rem" height="1.5rem" />,
@@ -802,86 +799,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: ReplaceColorSettings,
         synonyms: getSynonyms(t, "replaceColor"),
       },
-      scannerEffect: {
-        icon: <LocalIcon icon="scanner-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.scannerEffect.title", "Scanner Effect"),
-        component: null,
-        description: t("home.scannerEffect.desc", "Create a PDF that looks like it was scanned"),
-        categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
-        endpoints: ["scanner-effect"],
-        synonyms: getSynonyms(t, "scannerEffect"),
-        automationSettings: null
-      },
-
-      // Developer Tools
-
-      showJS: {
-        icon: <LocalIcon icon="javascript-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.showJS.title", "Show JavaScript"),
-        component: ShowJS,
-        description: t("home.showJS.desc", "Extract and display JavaScript code from PDF documents"),
-        categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
-        maxFiles: 1,
-        endpoints: ["show-javascript"],
-        synonyms: getSynonyms(t, "showJS"),
-        supportsAutomate: false,
-        automationSettings: null
-      },
-      devApi: {
-        icon: <LocalIcon icon="open-in-new-rounded" width="1.5rem" height="1.5rem" style={{ color: "#2F7BF6" }} />,
-        name: t("home.devApi.title", "API"),
-        component: null,
-        description: t("home.devApi.desc", "Link to API documentation"),
-        categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
-        link: devApiLink,
-        endpoints: ["dev-api-docs"],
-        synonyms: getSynonyms(t, "devApi"),
-        supportsAutomate: false,
-        automationSettings: null
-      },
-      devFolderScanning: {
-        icon: <LocalIcon icon="open-in-new-rounded" width="1.5rem" height="1.5rem" style={{ color: "#2F7BF6" }} />,
-        name: t("home.devFolderScanning.title", "Automated Folder Scanning"),
-        component: null,
-        description: t("home.devFolderScanning.desc", "Link to automated folder scanning guide"),
-        categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
-        link: "https://docs.stirlingpdf.com/Configuration/Folder%20Scanning/",
-        endpoints: ["dev-folder-scanning-docs"],
-        synonyms: getSynonyms(t, "devFolderScanning"),
-        supportsAutomate: false,
-        automationSettings: null
-      },
-      devSsoGuide: {
-        icon: <LocalIcon icon="open-in-new-rounded" width="1.5rem" height="1.5rem" style={{ color: "#2F7BF6" }} />,
-        name: t("home.devSsoGuide.title", "SSO Guide"),
-        component: null,
-        description: t("home.devSsoGuide.desc", "Link to SSO guide"),
-        categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
-        link: "https://docs.stirlingpdf.com/Configuration/Single%20Sign-On%20Configuration/",
-        endpoints: ["dev-sso-guide-docs"],
-        synonyms: getSynonyms(t, "devSsoGuide"),
-        supportsAutomate: false,
-        automationSettings: null
-      },
-      devAirgapped: {
-        icon: <LocalIcon icon="open-in-new-rounded" width="1.5rem" height="1.5rem" style={{ color: "#2F7BF6" }} />,
-        name: t("home.devAirgapped.title", "Air-gapped Setup"),
-        component: null,
-        description: t("home.devAirgapped.desc", "Link to air-gapped setup guide"),
-        categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
-        link: "https://docs.stirlingpdf.com/Paid-Offerings/#activating-your-license",
-        endpoints: ["dev-airgapped-docs"],
-        synonyms: getSynonyms(t, "devAirgapped"),
-        supportsAutomate: false,
-        automationSettings: null
-      },
-
       // Recommended Tools
       compare: {
         icon: <LocalIcon icon="compare-rounded" width="1.5rem" height="1.5rem" />,

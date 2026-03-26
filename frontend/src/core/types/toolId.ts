@@ -28,7 +28,6 @@ export const CORE_REGULAR_TOOL_IDS = [
   'annotate',
   'scannerImageSplit',
   'editTableOfContents',
-  'scannerEffect',
   'autoRename',
   'pageLayout',
   'scalePages',
@@ -54,7 +53,6 @@ export const CORE_REGULAR_TOOL_IDS = [
   'validateSignature',
   'timestampPdf',
   'replaceColor',
-  'showJS',
   'bookletImposition',
   'pdfTextEditor',
   'formFill',
@@ -67,10 +65,6 @@ export const CORE_SUPER_TOOL_IDS = [
 ] as const;
 
 export const CORE_LINK_TOOL_IDS = [
-  'devApi',
-  'devFolderScanning',
-  'devSsoGuide',
-  'devAirgapped',
 ] as const;
 
 export const REGULAR_TOOL_IDS = [

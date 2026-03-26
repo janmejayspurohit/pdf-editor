@@ -1,8 +1,7 @@
 import React from 'react';
-import { Text, Badge } from '@mantine/core';
+import { Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import HotkeyDisplay from '@app/components/hotkeys/HotkeyDisplay';
-import FavoriteStar from '@app/components/tools/toolPicker/FavoriteStar';
 import { ToolRegistryEntry, getSubcategoryColor } from '@app/data/toolsTaxonomy';
 import { getIconBackground, getIconStyle, getItemClasses, useToolMeta, getDisabledLabel } from '@app/components/tools/fullscreen/shared';
 
@@ -15,7 +14,7 @@ interface DetailedToolItemProps {
 
 const DetailedToolItem: React.FC<DetailedToolItemProps> = ({ id, tool, isSelected, onClick }) => {
   const { t } = useTranslation();
-  const { binding, isFav, toggleFavorite, disabled, disabledReason } = useToolMeta(id, tool);
+  const { binding, disabled, disabledReason } = useToolMeta(id, tool);
 
   const categoryColor = getSubcategoryColor(tool.subcategoryId);
   const iconBg = getIconBackground(categoryColor, true);
@@ -40,7 +39,7 @@ const DetailedToolItem: React.FC<DetailedToolItemProps> = ({ id, tool, isSelecte
   return (
     <button
       type="button"
-      className={`tool-panel__fullscreen-item ${getItemClasses(true)} ${isSelected ? 'tool-panel__fullscreen-item--selected' : ''} tool-panel__fullscreen-item--with-star`}
+      className={`tool-panel__fullscreen-item ${getItemClasses(true)} ${isSelected ? 'tool-panel__fullscreen-item--selected' : ''}`}
       onClick={onClick}
       aria-disabled={disabled}
       disabled={disabled}
@@ -63,16 +62,6 @@ const DetailedToolItem: React.FC<DetailedToolItemProps> = ({ id, tool, isSelecte
           <Text fw={600} size="sm" className="tool-panel__fullscreen-name">
             {tool.name}
           </Text>
-          {tool.versionStatus === 'alpha' && (
-            <Badge
-              size="xs"
-              variant="light"
-              color="orange"
-            >
-              {/* we can add more translations for different badges in future, like beta, etc. */}
-            {t('toolPanel.alpha', 'Alpha')}
-            </Badge>
-          )}
         </div>
         <Text size="sm" c="dimmed" className="tool-panel__fullscreen-description">
           {disabled ? (
@@ -91,15 +80,6 @@ const DetailedToolItem: React.FC<DetailedToolItemProps> = ({ id, tool, isSelecte
           </div>
         )}
       </span>
-      {!disabled && (
-        <div className="tool-panel__fullscreen-star">
-          <FavoriteStar
-            isFavorite={isFav}
-            onToggle={toggleFavorite}
-            size="sm"
-          />
-        </div>
-      )}
     </button>
   );
 };

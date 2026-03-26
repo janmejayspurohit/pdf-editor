@@ -29,7 +29,7 @@ public class OpenApiConfig {
 
     private final ApplicationProperties applicationProperties;
 
-    private static final String DEFAULT_TITLE = "Stirling PDF API";
+    private static final String DEFAULT_TITLE = "PDF Editor API";
     private static final String DEFAULT_DESCRIPTION =
             "API documentation for all Server-Side processing.\n"
                     + "Please note some functionality might be UI only and missing from here.";
@@ -45,17 +45,8 @@ public class OpenApiConfig {
                 new Info()
                         .title(DEFAULT_TITLE)
                         .version(version)
-                        .license(
-                                new License()
-                                        .name("MIT")
-                                        .url(
-                                                "https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/refs/heads/main/LICENSE"))
-                        .termsOfService("https://www.stirlingpdf.com/terms")
-                        .contact(
-                                new Contact()
-                                        .name("Stirling Software")
-                                        .url("https://www.stirlingpdf.com")
-                                        .email("contact@stirlingpdf.com"))
+                        .license(new License().name("MIT"))
+                        .contact(new Contact().name("PDF Editor"))
                         .description(DEFAULT_DESCRIPTION);
 
         OpenAPI openAPI = new OpenAPI().info(info).openapi("3.0.3");

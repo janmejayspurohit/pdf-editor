@@ -1,6 +1,6 @@
 import React, { useState, useRef, forwardRef, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from 'react-dom';
-import { Stack, Divider, Menu, Indicator } from "@mantine/core";
+import { Stack, Divider, Indicator } from "@mantine/core";
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
@@ -14,15 +14,11 @@ import { useSidebarNavigation } from '@app/hooks/useSidebarNavigation';
 import { handleUnlessSpecialClick } from '@app/utils/clickHandlers';
 import { ButtonConfig } from '@app/types/sidebar';
 import '@app/components/shared/quickAccessBar/QuickAccessBar.css';
-import { Tooltip } from '@app/components/shared/Tooltip';
 import AllToolsNavButton from '@app/components/shared/AllToolsNavButton';
 import ActiveToolButton from "@app/components/shared/quickAccessBar/ActiveToolButton";
 import AppConfigModal from '@app/components/shared/AppConfigModal';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
-import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
-import { requestStartTour } from '@app/constants/events';
 import QuickAccessButton from '@app/components/shared/quickAccessBar/QuickAccessButton';
-import { useToursTooltip } from '@app/components/shared/quickAccessBar/useToursTooltip';
 import ShareManagementModal from '@app/components/shared/ShareManagementModal';
 import apiClient from '@app/services/apiClient';
 import { absoluteWithBasePath } from '@app/constants/app';
@@ -66,7 +62,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { actions: navigationActions } = useNavigationActions();
   const { getToolNavigation } = useSidebarNavigation();
   const { config } = useAppConfig();
-  const licenseAlert = useLicenseAlert();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const [accessMenuOpen, setAccessMenuOpen] = useState(false);
@@ -127,15 +122,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   }, [signMenuOpen, groupSigningEnabled]);
 
   const configButtonIcon = useConfigButtonIcon();
-
-  const {
-    tooltipOpen,
-    manualCloseOnly,
-    showCloseButton,
-    toursMenuOpen,
-    setToursMenuOpen,
-    handleTooltipOpenChange,
-  } = useToursTooltip();
 
   const isRTL = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
   const hasSelectedFiles = selectedFiles.length > 0;
@@ -602,17 +588,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     config?.showSettingsWhenNoLogin === false;
 
   const bottomButtons: ButtonConfig[] = [
-    {
-      id: 'help',
-      name: t("quickAccess.tours", "Tours"),
-      icon: <LocalIcon icon="explore-rounded" width="1.25rem" height="1.25rem" />,
-      isRound: true,
-      size: 'md',
-      type: 'action',
-      onClick: () => {
-        // This will be overridden by the wrapper logic
-      },
-    },
     ...(shouldHideSettingsButton ? [] : [{
       id: 'config',
       name: t("quickAccess.settings", "Settings"),
@@ -732,111 +707,10 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
           {/* Bottom section */}
           <Stack gap="lg" align="stretch">
             {bottomButtons.map((buttonConfig, index) => {
-              // Handle help button with menu or direct action
-              if (buttonConfig.id === 'help') {
-                const isAdmin = config?.isAdmin === true;
-                const toursTooltipContent = isAdmin
-                  ? t('quickAccess.toursTooltip.admin', 'Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour.')
-                  : t('quickAccess.toursTooltip.user', 'Watch walkthroughs here: Tools tour and the New V2 layout tour.');
-                const tourItems = [
-                  {
-                    key: 'whatsnew',
-                    icon: <LocalIcon icon="auto-awesome-rounded" width="1.25rem" height="1.25rem" />,
-                    title: t("quickAccess.helpMenu.whatsNewTour", "See what's new in V2"),
-                    description: t("quickAccess.helpMenu.whatsNewTourDesc", "Tour the updated layout"),
-                    onClick: () => requestStartTour('whatsnew'),
-                  },
-                  {
-                    key: 'tools',
-                    icon: <LocalIcon icon="view-carousel-rounded" width="1.25rem" height="1.25rem" />,
-                    title: t("quickAccess.helpMenu.toolsTour", "Tools Tour"),
-                    description: t("quickAccess.helpMenu.toolsTourDesc", "Learn what the tools can do"),
-                    onClick: () => requestStartTour('tools'),
-                  },
-                  ...(isAdmin ? [{
-                    key: 'admin',
-                    icon: <LocalIcon icon="admin-panel-settings-rounded" width="1.25rem" height="1.25rem" />,
-                    title: t("quickAccess.helpMenu.adminTour", "Admin Tour"),
-                    description: t("quickAccess.helpMenu.adminTourDesc", "Explore admin settings & features"),
-                    onClick: () => requestStartTour('admin'),
-                  }] : []),
-                ];
-
-                const helpButtonNode = (
-                  <div data-tour="help-button">
-                    <Menu
-                      position={isRTL ? 'left' : 'right'}
-                      offset={10}
-                      zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
-                      opened={toursMenuOpen}
-                      onChange={setToursMenuOpen}
-                    >
-                      <Menu.Target>
-                        <div>{renderNavButton(buttonConfig, index)}</div>
-                      </Menu.Target>
-                      <Menu.Dropdown>
-                        {tourItems.map((item) => (
-                          <Menu.Item
-                            key={item.key}
-                            leftSection={item.icon}
-                            onClick={item.onClick}
-                          >
-                            <div>
-                              <div style={{ fontWeight: 500 }}>
-                                {item.title}
-                              </div>
-                              <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>
-                                {item.description}
-                              </div>
-                            </div>
-                          </Menu.Item>
-                        ))}
-                      </Menu.Dropdown>
-                    </Menu>
-                  </div>
-                );
-
-                return (
-                  <React.Fragment key={buttonConfig.id}>
-                    <Tooltip
-                      position="right"
-                      arrow
-                      offset={8}
-                      open={tooltipOpen}
-                      manualCloseOnly={manualCloseOnly}
-                      showCloseButton={showCloseButton}
-                      closeOnOutside={false}
-                      openOnFocus={false}
-                      content={toursTooltipContent}
-                      onOpenChange={handleTooltipOpenChange}
-                    >
-                      {helpButtonNode}
-                    </Tooltip>
-                  </React.Fragment>
-                );
-              }
-
               const buttonNode = renderNavButton(buttonConfig, index);
-              const shouldShowSettingsBadge =
-                buttonConfig.id === 'config' &&
-                licenseAlert.active &&
-                licenseAlert.audience === 'admin';
-
               return (
                 <React.Fragment key={buttonConfig.id}>
-                  {shouldShowSettingsBadge ? (
-                    <Indicator
-                      inline
-                      size={12}
-                      color="orange"
-                      position="top-end"
-                      offset={4}
-                    >
-                      {buttonNode}
-                    </Indicator>
-                  ) : (
-                    buttonNode
-                  )}
+                  {buttonNode}
                 </React.Fragment>
               );
             })}

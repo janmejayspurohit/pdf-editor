@@ -34,7 +34,7 @@ public class SpringDocConfig {
                         openApi -> {
                             openApi.info(
                                     openApi.getInfo()
-                                            .title("Stirling PDF - Processing API")
+                                            .title("PDF Editor - Processing API")
                                             .description(
                                                     "APIs for converting, editing, securing, and analysing PDF documents. Use these endpoints to automate common PDF tasks (like split, merge, convert, OCR) and plug them into your own apps and backend jobs."));
                         })
@@ -58,7 +58,7 @@ public class SpringDocConfig {
                         openApi -> {
                             openApi.info(
                                     openApi.getInfo()
-                                            .title("Stirling PDF - Management API")
+                                            .title("PDF Editor - Management API")
                                             .description(
                                                     "Endpoints for authentication, user management, invitations, audit logging, and system configuration."));
                         })
@@ -80,7 +80,7 @@ public class SpringDocConfig {
                         openApi -> {
                             openApi.info(
                                     openApi.getInfo()
-                                            .title("Stirling PDF - System API")
+                                            .title("PDF Editor - System API")
                                             .description(
                                                     "System information, UI metadata, job status, and file management endpoints."));
                         })

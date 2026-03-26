@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BASE_PATH } from '@app/constants/app';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
-import { TOUR_STATE_EVENT, type TourStatePayload } from '@app/constants/events';
 import { getCookieConsentOverrides } from '@app/extensions/cookieConsentConfig';
 
 declare global {
@@ -155,7 +154,7 @@ export const useCookieConsent = ({
                 en: {
                   consentModal: {
                     title: t('cookieBanner.popUp.title', 'How we use Cookies'),
-                    description: t('cookieBanner.popUp.description.1', 'We use cookies and other technologies to make Stirling PDF work better for you—helping us improve our tools and keep building features you\'ll love.') +
+                    description: t('cookieBanner.popUp.description.1', 'We use cookies and other technologies to make PDF Editor work better for you—helping us improve our tools and keep building features you\'ll love.') +
                                "<br>" +
                                t('cookieBanner.popUp.description.2', 'If you\'d rather not, clicking \'No Thanks\' will only enable the essential cookies needed to keep things running smoothly.'),
                     acceptAllBtn: t('cookieBanner.popUp.acceptAllBtn', 'Okay'),
@@ -172,9 +171,9 @@ export const useCookieConsent = ({
                     sections: [
                       {
                         title: t('cookieBanner.preferencesModal.subtitle', 'Cookie Usage'),
-                        description: t('cookieBanner.preferencesModal.description.1', 'Stirling PDF uses cookies and similar technologies to enhance your experience and understand how our tools are used. This helps us improve performance, develop the features you care about, and provide ongoing support to our users.') +
+                        description: t('cookieBanner.preferencesModal.description.1', 'PDF Editor uses cookies and similar technologies to enhance your experience and understand how our tools are used. This helps us improve performance, develop the features you care about, and provide ongoing support to our users.') +
                                    "<br><br>" +
-                                   t('cookieBanner.preferencesModal.description.2', 'Stirling PDF cannot—and will never—track or access the content of the documents you use.') +
+                                   t('cookieBanner.preferencesModal.description.2', 'PDF Editor cannot—and will never—track or access the content of the documents you use.') +
                                    "<b> " +
                                    t('cookieBanner.preferencesModal.description.3', 'Your privacy and trust are at the core of what we do.') +
                                    "</b>"
@@ -189,7 +188,7 @@ export const useCookieConsent = ({
                       },
                       {
                         title: t('cookieBanner.preferencesModal.analytics.title', 'Analytics'),
-                        description: t('cookieBanner.preferencesModal.analytics.description', 'These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with.'),
+                        description: t('cookieBanner.preferencesModal.analytics.description', 'These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—PDF Editor cannot and will never track the content of the documents you work with.'),
                         linkedCategory: "analytics"
                       }
                     ]
@@ -284,19 +283,6 @@ export const useCookieConsent = ({
   useEffect(() => {
     if (!isInitialized || !window.CookieConsent) return;
 
-    const handleTourState = (event: Event) => {
-      const { detail } = event as CustomEvent<TourStatePayload>;
-      if (detail?.isOpen) {
-        window.CookieConsent?.hide();
-      } else {
-        const consentCookie = window.CookieConsent?.getCookie?.();
-        const hasConsented = consentCookie && Object.keys(consentCookie).length > 0;
-        if (!hasConsented) window.CookieConsent?.show();
-      }
-    };
-
-    window.addEventListener(TOUR_STATE_EVENT, handleTourState);
-    return () => window.removeEventListener(TOUR_STATE_EVENT, handleTourState);
   }, [isInitialized]);
 
   const showCookieConsent = useCallback(() => {

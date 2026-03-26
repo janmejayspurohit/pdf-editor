@@ -7,8 +7,6 @@ import { RainbowThemeProvider } from "@app/components/shared/RainbowThemeProvide
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import HomePage from "@app/pages/HomePage";
 import MobileScannerPage from "@app/pages/MobileScannerPage";
-import Onboarding from "@app/components/onboarding/Onboarding";
-
 // Import global styles
 import "@app/styles/tailwind.css";
 import "@app/styles/cookieconsent.css";
@@ -49,7 +47,6 @@ export default function App() {
             <AppProviders>
               <AppLayout>
                 <HomePage />
-                <Onboarding />
               </AppLayout>
             </AppProviders>
           }

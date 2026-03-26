@@ -14,7 +14,6 @@ import DeleteSweepRoundedIcon from '@mui/icons-material/DeleteSweepRounded';
 import SmartToyRoundedIcon from '@mui/icons-material/SmartToyRounded';
 import BuildRoundedIcon from '@mui/icons-material/BuildRounded';
 import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
-import CodeRoundedIcon from '@mui/icons-material/CodeRounded';
 import { ProprietaryToolId } from '@app/types/proprietaryToolId';
 
 export enum SubcategoryId {
@@ -28,7 +27,6 @@ export enum SubcategoryId {
   AUTOMATION = 'automation',
   GENERAL = 'general',
   ADVANCED_FORMATTING = 'advancedFormatting',
-  DEVELOPER_TOOLS = 'developerTools'
 }
 
 export enum ToolCategoryId {
@@ -59,10 +57,6 @@ export type ToolRegistryEntry = {
 	supportsAutomate?: boolean;
 	// Synonyms for search (optional)
 	synonyms?: string[];
-	// Version status indicator (e.g., "alpha", "beta")
-	versionStatus?: "alpha" | "beta";
-	// Whether this tool requires premium access
-	requiresPremium?: boolean;
 }
 
 export type RegularToolRegistry = Record<RegularToolId, ToolRegistryEntry>;
@@ -82,7 +76,6 @@ export const SUBCATEGORY_ORDER: SubcategoryId[] = [
   SubcategoryId.AUTOMATION,
   SubcategoryId.GENERAL,
   SubcategoryId.ADVANCED_FORMATTING,
-  SubcategoryId.DEVELOPER_TOOLS,
 ];
 
 export const SUBCATEGORY_COLOR_MAP: Record<SubcategoryId, string> = {
@@ -96,7 +89,6 @@ export const SUBCATEGORY_COLOR_MAP: Record<SubcategoryId, string> = {
   [SubcategoryId.AUTOMATION]: 'var(--category-color-automation)',        // Pink
   [SubcategoryId.GENERAL]: 'var(--category-color-general)',           // Blue
   [SubcategoryId.ADVANCED_FORMATTING]: 'var(--category-color-formatting)', // Purple
-  [SubcategoryId.DEVELOPER_TOOLS]: 'var(--category-color-developer)',   // Gray
 };
 
 export const getSubcategoryIcon = (subcategory: SubcategoryId): React.ReactNode => {
@@ -121,8 +113,6 @@ export const getSubcategoryIcon = (subcategory: SubcategoryId): React.ReactNode 
       return React.createElement(BuildRoundedIcon);
     case SubcategoryId.ADVANCED_FORMATTING:
       return React.createElement(TuneRoundedIcon);
-    case SubcategoryId.DEVELOPER_TOOLS:
-      return React.createElement(CodeRoundedIcon);
     default:
       return React.createElement(BuildRoundedIcon);
   }

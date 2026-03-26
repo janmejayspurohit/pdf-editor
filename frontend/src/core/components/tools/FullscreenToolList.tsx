@@ -5,15 +5,11 @@ import { ToolRegistryEntry, getSubcategoryLabel, getSubcategoryColor, getSubcate
 import { ToolId } from '@app/types/toolId';
 import { useToolSections } from '@app/hooks/useToolSections';
 import NoToolsFound from '@app/components/tools/shared/NoToolsFound';
-import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
-import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import ThumbUpRoundedIcon from '@mui/icons-material/ThumbUpRounded';
 import Badge from '@app/components/shared/Badge';
 import '@app/components/tools/ToolPanel.css';
 import DetailedToolItem from '@app/components/tools/fullscreen/DetailedToolItem';
 import CompactToolItem from '@app/components/tools/fullscreen/CompactToolItem';
-import { useFavoriteToolItems } from '@app/hooks/tools/useFavoriteToolItems';
-
 interface FullscreenToolListProps {
   filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>;
   searchQuery: string;
@@ -32,14 +28,10 @@ const FullscreenToolList = ({
   onSelect,
 }: FullscreenToolListProps) => {
   const { t } = useTranslation();
-  const { toolRegistry, favoriteTools } = useToolWorkflow();
 
   const { sections, searchGroups } = useToolSections(filteredTools, searchQuery);
 
   const tooltipPortalTarget = typeof document !== 'undefined' ? document.body : undefined;
-
-
-  const favoriteToolItems = useFavoriteToolItems(favoriteTools, toolRegistry);
 
   const quickSection = useMemo(() => sections.find(section => section.key === 'quick'), [sections]);
   const recommendedItems = useMemo(() => {
@@ -49,8 +41,8 @@ const FullscreenToolList = ({
     return items;
   }, [quickSection]);
 
-  // Show recommended/favorites section only when not searching
-  const showRecentFavorites = searchQuery.trim().length === 0 && ((recommendedItems.length > 0) || favoriteToolItems.length > 0);
+  // Show recommended section only when not searching
+  const showRecentFavorites = searchQuery.trim().length === 0 && recommendedItems.length > 0;
 
   const subcategoryGroups = useMemo(() => {
     if (searchQuery.trim().length > 0) {
@@ -103,48 +95,6 @@ const FullscreenToolList = ({
     <div className={containerClass}>
       {showRecentFavorites && (
         <>
-          {favoriteToolItems.length > 0 && (
-            <section
-              className="tool-panel__fullscreen-group tool-panel__fullscreen-group--special"
-              style={{
-                borderColor: 'var(--fullscreen-border-favorites)',
-              }}
-            >
-              <header className="tool-panel__fullscreen-section-header">
-                <div className="tool-panel__fullscreen-section-title">
-                  <span
-                    className="tool-panel__fullscreen-section-icon"
-                    style={{
-                      color: 'var(--special-color-favorites)',
-                    }}
-                    aria-hidden
-                  >
-                    <StarRoundedIcon />
-                  </span>
-                  <Text size="sm" fw={600} tt="uppercase" lts={0.5} c="dimmed">
-                    {t('toolPanel.fullscreen.favorites', 'Favourites')}
-                  </Text>
-                </div>
-                <Badge
-                  size="sm"
-                  variant="colored"
-                  color="var(--special-color-favorites)"
-                >
-                  {favoriteToolItems.length}
-                </Badge>
-              </header>
-              {showDescriptions ? (
-                <div className="tool-panel__fullscreen-grid tool-panel__fullscreen-grid--detailed">
-                  {favoriteToolItems.map((item) => item && renderToolItem(item.id, item.tool))}
-                </div>
-              ) : (
-                <div className="tool-panel__fullscreen-list">
-                  {favoriteToolItems.map((item) => item && renderToolItem(item.id, item.tool))}
-                </div>
-              )}
-            </section>
-          )}
-
           {recommendedItems.length > 0 && (
             <section
               className="tool-panel__fullscreen-group tool-panel__fullscreen-group--special"

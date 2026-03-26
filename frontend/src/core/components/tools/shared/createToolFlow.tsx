@@ -53,7 +53,7 @@ export interface ExecuteButtonConfig {
    * from endpointEnabled + paramsValid is insufficient.
    */
   disabledReason?: ExecuteDisabledReason;
-  /** Raw override for tools with fully custom disable logic (e.g. Compare, ShowJS). */
+  /** Raw override for tools with fully custom disable logic. */
   disabled?: boolean;
   testId?: string;
   showCloudBadge?: boolean;

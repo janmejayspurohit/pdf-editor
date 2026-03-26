@@ -62,7 +62,7 @@ if (rootProject.ext.mavenUrl.isEmpty()) {
 jar {
     enabled = false
     manifest {
-        attributes "Implementation-Title": "Stirling-PDF",
+        attributes "Implementation-Title": "pdf-editor",
             "Implementation-Version": project.version
     }
 }
@@ -88,8 +88,6 @@ allprojects {
 def appVersionStr = project.version.toString()
 def tauriConfigPath = layout.projectDirectory.file('frontend/src-tauri/tauri.conf.json').asFile.path
 def sim1Path = layout.projectDirectory.file('frontend/src/core/testing/serverExperienceSimulations.ts').asFile.path
-def sim2Path = layout.projectDirectory.file('frontend/src/proprietary/testing/serverExperienceSimulations.ts').asFile.path
-
 tasks.register('syncAppVersion') {
     group = 'versioning'
     description = 'Synchronizes app version across desktop and simulation configs.'
@@ -107,7 +105,7 @@ tasks.register('syncAppVersion') {
             }
         }
 
-        [new File(sim1Path), new File(sim2Path)].each { f ->
+        [new File(sim1Path)].each { f ->
             if (f.exists()) {
                 def content = f.getText('UTF-8')
                 def matcher = (content =~ /(appVersion:\s*')([^']*)(')/)
@@ -146,7 +144,7 @@ subprojects {
         }
     }
 
-    if (project.name != "stirling-pdf") {
+    if (project.name != "pdf-editor") {
         bootJar {
             enabled = false
         }
@@ -378,7 +376,7 @@ subprojects {
         dependsOn(rootProject.tasks.writeVersion)
     }
 
-    if (name == 'stirling-pdf') {
+    if (name == 'pdf-editor') {
         apply plugin: 'org.springdoc.openapi-gradle-plugin'
 
         openApi {
@@ -390,7 +388,6 @@ subprojects {
 
         tasks.named("forkedSpringBootRun") {
             dependsOn(":common:jar")
-            dependsOn(":proprietary:jar")
         }
 
         tasks.register("copySwaggerDoc", Copy) {
@@ -455,11 +452,11 @@ licenseReport {
     configurations = [ "productionRuntimeClasspath", "runtimeClasspath" ]
 }
 
-// Configure the forked spring boot run task to properly delegate to the stirling-pdf module
+// Configure the forked spring boot run task to properly delegate to the pdf-editor module
 tasks.named('forkedSpringBootRun') {
-    dependsOn ':stirling-pdf:bootRun'
+    dependsOn ':pdf-editor:bootRun'
     doFirst {
-        println "Delegating forkedSpringBootRun to :stirling-pdf:bootRun"
+        println "Delegating forkedSpringBootRun to :pdf-editor:bootRun"
     }
 }
 
@@ -480,8 +477,8 @@ spotless {
 
 sonar {
     properties {
-        property "sonar.projectKey", "Stirling-Tools_Stirling-PDF"
-        property "sonar.organization", "stirling-tools"
+        property "sonar.projectKey", "pdf-editor"
+        property "sonar.organization", "pdf-editor"
 
         property "sonar.exclusions", "**/build-wrapper-dump.json, **/src/main/java/org/apache/**, **/src/main/resources/static/pdfjs/**, **/src/main/resources/static/pdfjs-legacy/**, **/src/main/resources/static/js/thirdParty/**"
         property "sonar.coverage.exclusions", "**/src/main/java/org/apache/**, **/src/main/resources/static/pdfjs/**, **/src/main/resources/static/pdfjs-legacy/**, **/src/main/resources/static/js/thirdParty/**"
@@ -491,7 +488,7 @@ sonar {
 
 swaggerhubUpload {
     // dependsOn = generateOpenApiDocs  // Depends on your task generating Swagger docs
-    api = "Stirling-PDF"  // The name of your API on SwaggerHub
+    api = "pdf-editor"  // The name of your API on SwaggerHub
     owner = "${System.getenv().getOrDefault('SWAGGERHUB_USER', 'Frooodle')}"  // Your SwaggerHub username (or organization name)
     version = project.version  // The version of your API
     inputFile = file("SwaggerDoc.json")  // The path to your Swagger docs
@@ -518,11 +515,8 @@ repositories {
 }
 
 dependencies {
-    implementation project(':stirling-pdf')
+    implementation project(':pdf-editor')
     implementation project(':common')
-    if (rootProject.ext.isSecurityDisabled()) {
-        implementation project(':proprietary')
-    }
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly "org.junit.platform:junit-platform-launcher:$junitPlatformVersion"
@@ -546,21 +540,21 @@ tasks.register('printVersion') {
 
 tasks.named('bootRun') {
     group = 'application'
-    description = 'Delegates to :stirling-pdf:bootRun'
-    dependsOn ':stirling-pdf:bootRun'
+    description = 'Delegates to :pdf-editor:bootRun'
+    dependsOn ':pdf-editor:bootRun'
 
     doFirst {
-        println "Delegating to :stirling-pdf:bootRun"
+        println "Delegating to :pdf-editor:bootRun"
     }
 }
 
 tasks.named('build') {
     group = 'build'
-    description = 'Delegates to :stirling-pdf:bootJar'
-    dependsOn ':stirling-pdf:bootJar', 'buildRestartHelper', 'syncAppVersion'
+    description = 'Delegates to :pdf-editor:bootJar'
+    dependsOn ':pdf-editor:bootJar', 'buildRestartHelper', 'syncAppVersion'
 
     doFirst {
-        println "Delegating to :stirling-pdf:bootJar"
+        println "Delegating to :pdf-editor:bootJar"
     }
 }
 

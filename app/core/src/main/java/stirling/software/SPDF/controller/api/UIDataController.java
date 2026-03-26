@@ -3,11 +3,7 @@ package stirling.software.SPDF.controller.api;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -103,62 +99,6 @@ public class UIDataController {
             log.error("Failed to load licenses data", e);
             data.setDependencies(Collections.emptyList());
         }
-
-        return ResponseEntity.ok(data);
-    }
-
-    @GetMapping("/pipeline")
-    @Operation(summary = "Get pipeline configuration data")
-    public ResponseEntity<PipelineData> getPipelineData() {
-        PipelineData data = new PipelineData();
-        List<String> pipelineConfigs = new ArrayList<>();
-        List<Map<String, String>> pipelineConfigsWithNames = new ArrayList<>();
-
-        if (new java.io.File(runtimePathConfig.getPipelineDefaultWebUiConfigs()).exists()) {
-            try (Stream<Path> paths =
-                    Files.walk(Paths.get(runtimePathConfig.getPipelineDefaultWebUiConfigs()))) {
-                List<Path> jsonFiles =
-                        paths.filter(Files::isRegularFile)
-                                .filter(p -> p.toString().endsWith(".json"))
-                                .toList();
-
-                for (Path jsonFile : jsonFiles) {
-                    String content = Files.readString(jsonFile, StandardCharsets.UTF_8);
-                    pipelineConfigs.add(content);
-                }
-
-                for (String config : pipelineConfigs) {
-                    Map<String, Object> jsonContent =
-                            objectMapper.readValue(
-                                    config, new TypeReference<Map<String, Object>>() {});
-                    String name = (String) jsonContent.get("name");
-                    if (name == null || name.length() < 1) {
-                        String filename =
-                                jsonFiles
-                                        .get(pipelineConfigs.indexOf(config))
-                                        .getFileName()
-                                        .toString();
-                        name = filename.substring(0, filename.lastIndexOf('.'));
-                    }
-                    Map<String, String> configWithName = new HashMap<>();
-                    configWithName.put("json", config);
-                    configWithName.put("name", name);
-                    pipelineConfigsWithNames.add(configWithName);
-                }
-            } catch (IOException e) {
-                log.error("Failed to load pipeline configs", e);
-            }
-        }
-
-        if (pipelineConfigsWithNames.isEmpty()) {
-            Map<String, String> configWithName = new HashMap<>();
-            configWithName.put("json", "");
-            configWithName.put("name", "No preloaded configs found");
-            pipelineConfigsWithNames.add(configWithName);
-        }
-
-        data.setPipelineConfigsWithNames(pipelineConfigsWithNames);
-        data.setPipelineConfigs(pipelineConfigs);
 
         return ResponseEntity.ok(data);
     }
@@ -271,12 +211,6 @@ public class UIDataController {
     @Data
     public static class LicensesData {
         private List<Dependency> dependencies;
-    }
-
-    @Data
-    public static class PipelineData {
-        private List<Map<String, String>> pipelineConfigsWithNames;
-        private List<String> pipelineConfigs;
     }
 
     @Data

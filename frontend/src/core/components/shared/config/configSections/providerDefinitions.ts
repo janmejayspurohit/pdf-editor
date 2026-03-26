@@ -305,7 +305,7 @@ const useTelegramProvider = (): Provider => {
         label: t('admin.settings.telegram.enabled.label', 'Enable Telegram Bot'),
         description: t(
           'admin.settings.telegram.enabled.description',
-          'Allow users to interact with Stirling PDF through your configured Telegram bot.'
+          'Allow users to interact with PDF Editor through your configured Telegram bot.'
         ),
         defaultValue: false,
       },
@@ -527,7 +527,7 @@ const useSAML2Provider = (): Provider => {
         type: 'text',
         label: t('provider.saml2.registrationId.label', 'Registration ID'),
         description: t('provider.saml2.registrationId.description', 'The name of your Service Provider (SP) app name'),
-        defaultValue: 'stirling',
+        defaultValue: 'pdf-editor',
       },
       {
         key: 'idpMetadataUri',
@@ -541,14 +541,14 @@ const useSAML2Provider = (): Provider => {
         type: 'text',
         label: t('provider.saml2.idpSingleLoginUrl.label', 'IDP Single Login URL'),
         description: t('provider.saml2.idpSingleLoginUrl.description', 'The URL for initiating SSO'),
-        placeholder: 'https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/sso/saml',
+        placeholder: 'https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_pdfeditor_1/externalKey/sso/saml',
       },
       {
         key: 'idpSingleLogoutUrl',
         type: 'text',
         label: t('provider.saml2.idpSingleLogoutUrl.label', 'IDP Single Logout URL'),
         description: t('provider.saml2.idpSingleLogoutUrl.description', 'The URL for initiating SLO'),
-        placeholder: 'https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/slo/saml',
+        placeholder: 'https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_pdfeditor_1/externalKey/slo/saml',
       },
       {
         key: 'idpIssuer',

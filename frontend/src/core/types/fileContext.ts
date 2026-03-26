@@ -99,7 +99,7 @@ export function getFormFillFileId(file: File | Blob | null | undefined): string 
   if (!file) return null;
 
   if (isStirlingFile(file)) {
-    return `stirling-${file.fileId}`;
+    return `pdf-editor-${file.fileId}`;
   }
 
   if (file instanceof File) {

@@ -87,7 +87,7 @@ export async function buildHistoryBundle(originalFileIds: FileId[] | FileId): Pr
     entries,
   };
 
-  zip.file('stirling-share.json', JSON.stringify(manifest, null, 2));
+  zip.file('pdf-editor-share.json', JSON.stringify(manifest, null, 2));
 
   const zipBlob = await zip.generateAsync({
     type: 'blob',
@@ -152,7 +152,7 @@ export async function buildSharePackage(
     entries,
   };
 
-  zip.file('stirling-share.json', JSON.stringify(manifest, null, 2));
+  zip.file('pdf-editor-share.json', JSON.stringify(manifest, null, 2));
 
   const zipBlob = await zip.generateAsync({
     type: 'blob',

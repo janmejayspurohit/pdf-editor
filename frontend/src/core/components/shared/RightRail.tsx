@@ -11,13 +11,10 @@ import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
 import { useFileActionIcons } from '@app/hooks/useFileActionIcons';
 
 import LanguageSelector from '@app/components/shared/LanguageSelector';
-import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import { ViewerContext } from '@app/contexts/ViewerContext';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { RightRailFooterExtensions } from '@app/components/rightRail/RightRailFooterExtensions';
-import DarkModeIcon from '@mui/icons-material/DarkMode';
-import LightModeIcon from '@mui/icons-material/LightMode';
 
 import { useSidebarContext } from '@app/contexts/SidebarContext';
 import { RightRailButtonConfig, RightRailRenderContext, RightRailSection } from '@app/types/rightRail';
@@ -50,7 +47,6 @@ export default function RightRail() {
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
   const viewerContext = React.useContext(ViewerContext);
-  const { toggleTheme, themeMode } = useRainbowThemeContext();
   const { buttons, actions, allButtonsDisabled } = useRightRail();
 
   const { pageEditorFunctions, toolPanelMode, leftPanelView } = useToolWorkflow();
@@ -237,24 +233,6 @@ export default function RightRail() {
           </React.Fragment>
         ))}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }} data-tour="right-rail-settings">
-          {renderWithTooltip(
-            <ActionIcon
-              variant="subtle"
-              radius="md"
-              className="right-rail-icon"
-              onClick={toggleTheme}
-            >
-              {themeMode === 'dark' ? (
-                <LightModeIcon sx={{ fontSize: '1.5rem' }} />
-              ) : (
-                <DarkModeIcon sx={{ fontSize: '1.5rem' }} />
-              )}
-            </ActionIcon>,
-            t('rightRail.toggleTheme', 'Toggle Theme'),
-            tooltipPosition,
-            tooltipOffset
-          )}
-
           <LanguageSelector
             position="left-start"
             offset={6}

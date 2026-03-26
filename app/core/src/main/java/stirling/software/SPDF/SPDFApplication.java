@@ -34,8 +34,7 @@ import stirling.software.common.model.ApplicationProperties;
 @SpringBootApplication(
         scanBasePackages = {
             "stirling.software.SPDF",
-            "stirling.software.common",
-            "stirling.software.proprietary"
+            "stirling.software.common"
         })
 public class SPDFApplication {
 

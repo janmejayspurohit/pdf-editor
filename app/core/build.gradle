@@ -37,19 +37,13 @@ spotless {
 }
 
 dependencies {
-    if (System.getenv('DISABLE_ADDITIONAL_FEATURES') != 'true'
-        || (project.hasProperty('DISABLE_ADDITIONAL_FEATURES')
-        && System.getProperty('DISABLE_ADDITIONAL_FEATURES') != 'true')) {
-        implementation project(':proprietary')
-    }
-
     implementation project(':common')
     implementation 'org.springframework.boot:spring-boot-starter-jetty'
     implementation 'org.eclipse.jetty.http2:jetty-http2-server'
     implementation 'org.eclipse.jetty:jetty-alpn-java-server'
     implementation ('org.telegram:telegrambots:6.9.7.1') {
         // Grizzly server + Jersey JAX-RS stack: only used for webhook mode;
-        // Stirling-PDF uses long-polling mode so these are dead weight (~3 MB)
+        // PDF Editor uses long-polling mode so these are dead weight (~3 MB)
         exclude group: 'org.glassfish.jersey.inject'
         exclude group: 'org.glassfish.jersey.media'
         exclude group: 'org.glassfish.jersey.containers'
@@ -163,7 +157,7 @@ bootJar {
 
     manifest {
         attributes(
-            'Implementation-Title': 'Stirling-PDF',
+            'Implementation-Title': 'pdf-editor',
             'Implementation-Version': project.version
         )
     }
@@ -318,4 +312,3 @@ if (buildWithFrontend) {
 }
 
 bootJar.dependsOn ':common:jar'
-bootJar.dependsOn ':proprietary:jar'

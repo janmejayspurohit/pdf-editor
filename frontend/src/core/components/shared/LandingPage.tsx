@@ -124,7 +124,7 @@ const LandingPage = () => {
           >
             <img
               src={logoPath}
-              alt="Stirling PDF Logo"
+              alt="PDF Editor Logo"
               style={{
                 height: 'auto',
                 pointerEvents: 'none',
@@ -147,11 +147,11 @@ const LandingPage = () => {
 
           {/* Centered content container */}
           <div className="flex flex-col items-center gap-4 flex-none w-full">
-            {/* Stirling PDF Branding */}
+            {/* Branding */}
             <Group gap="xs" align="center">
               <img
                 src={colorScheme === 'dark' ? wordmark.white : wordmark.grey}
-                alt="Stirling PDF"
+                alt="PDF Editor"
                 style={{ height: '2.2rem', width: 'auto' }}
               />
             </Group>

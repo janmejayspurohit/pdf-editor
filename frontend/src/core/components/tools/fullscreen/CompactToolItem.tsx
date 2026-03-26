@@ -1,9 +1,8 @@
 import React from 'react';
-import { Text, Badge } from '@mantine/core';
+import { Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import HotkeyDisplay from '@app/components/hotkeys/HotkeyDisplay';
-import FavoriteStar from '@app/components/tools/toolPicker/FavoriteStar';
 import { ToolRegistryEntry, getSubcategoryColor } from '@app/data/toolsTaxonomy';
 import { getIconBackground, getIconStyle, getItemClasses, useToolMeta, getDisabledLabel } from '@app/components/tools/fullscreen/shared';
 
@@ -17,7 +16,7 @@ interface CompactToolItemProps {
 
 const CompactToolItem: React.FC<CompactToolItemProps> = ({ id, tool, isSelected, onClick, tooltipPortalTarget }) => {
   const { t } = useTranslation();
-  const { binding, isFav, toggleFavorite, disabled, disabledReason } = useToolMeta(id, tool);
+  const { binding, disabled, disabledReason } = useToolMeta(id, tool);
   const categoryColor = getSubcategoryColor(tool.subcategoryId);
   const iconBg = getIconBackground(categoryColor, false);
   const iconClasses = 'tool-panel__fullscreen-list-icon';
@@ -38,7 +37,7 @@ const CompactToolItem: React.FC<CompactToolItemProps> = ({ id, tool, isSelected,
   const compactButton = (
     <button
       type="button"
-      className={`tool-panel__fullscreen-list-item ${getItemClasses(false)} ${isSelected ? 'tool-panel__fullscreen-list-item--selected' : ''} ${!disabled ? 'tool-panel__fullscreen-list-item--with-star' : ''}`}
+      className={`tool-panel__fullscreen-list-item ${getItemClasses(false)} ${isSelected ? 'tool-panel__fullscreen-list-item--selected' : ''}`}
       onClick={onClick}
       aria-disabled={disabled}
       disabled={disabled}
@@ -61,26 +60,8 @@ const CompactToolItem: React.FC<CompactToolItemProps> = ({ id, tool, isSelected,
           <Text fw={600} size="sm" className="tool-panel__fullscreen-name">
             {tool.name}
           </Text>
-          {tool.versionStatus === 'alpha' && (
-            <Badge
-              size="xs"
-              variant="light"
-              color="orange"
-            >
-              {t('toolPanel.alpha', 'Alpha')}
-            </Badge>
-          )}
         </div>
       </span>
-      {!disabled && (
-        <div className="tool-panel__fullscreen-star-compact">
-          <FavoriteStar
-            isFavorite={isFav}
-            onToggle={toggleFavorite}
-            size="xs"
-          />
-        </div>
-      )}
     </button>
   );
 

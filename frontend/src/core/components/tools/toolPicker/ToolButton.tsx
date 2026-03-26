@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Badge } from "@mantine/core";
+import { Button } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { ToolIcon } from "@app/components/shared/ToolIcon";
@@ -9,7 +9,6 @@ import { handleUnlessSpecialClick } from "@app/utils/clickHandlers";
 import FitText from "@app/components/shared/FitText";
 import { useHotkeys } from "@app/contexts/HotkeyContext";
 import HotkeyDisplay from "@app/components/hotkeys/HotkeyDisplay";
-import FavoriteStar from "@app/components/tools/toolPicker/FavoriteStar";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import type { ToolId } from "@app/types/toolId";
 import { getToolDisabledReason, getDisabledLabel } from "@app/components/tools/fullscreen/shared";
@@ -25,16 +24,15 @@ interface ToolButtonProps {
   rounded?: boolean;
   disableNavigation?: boolean;
   matchedSynonym?: string;
-  hasStars?: boolean;
   /** Called when an unavailable tool is clicked; if provided, overrides the default no-op */
   onUnavailableClick?: () => void;
 }
 
-const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect, disableNavigation = false, matchedSynonym, hasStars = false, onUnavailableClick }) => {
+const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect, disableNavigation = false, matchedSynonym, onUnavailableClick }) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const premiumEnabled = config?.premiumEnabled;
-  const { isFavorite, toggleFavorite, toolAvailability } = useToolWorkflow();
+  const { toolAvailability } = useToolWorkflow();
   const disabledReason = getToolDisabledReason(id, tool, toolAvailability, premiumEnabled);
   const isUnavailable = disabledReason !== null;
   // If onUnavailableClick is provided for a non-comingSoon tool, render as "cloud-available":
@@ -44,7 +42,6 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
   const { hotkeys } = useHotkeys();
   const binding = hotkeys[id];
   const { getToolNavigation } = useToolNavigation();
-  const fav = isFavorite(id as ToolId);
 
   // Check if this tool will route to SaaS backend (desktop only)
   const rawEndpoint = tool.operationConfig?.endpoint;
@@ -104,16 +101,6 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
             as="span"
             style={{ display: 'inline-block', maxWidth: '100%', opacity: visuallyUnavailable ? 0.25 : 1 }}
           />
-          {tool.versionStatus === 'alpha' && (
-            <Badge
-              size="xs"
-              variant="light"
-              color="orange"
-              style={{ flexShrink: 0, opacity: visuallyUnavailable ? 0.25 : 1 }}
-            >
-              {t('toolPanel.alpha', 'Alpha')}
-            </Badge>
-          )}
           {(usesCloud && !visuallyUnavailable) && (
             <CloudBadge />
           )}
@@ -214,18 +201,8 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
     </Button>
   );
 
-  const star = hasStars && !visuallyUnavailable ? (
-    <FavoriteStar
-      isFavorite={fav}
-      onToggle={() => toggleFavorite(id as ToolId)}
-      className="tool-button-star"
-      size="xs"
-    />
-  ) : null;
-
   return (
     <div className="tool-button-container">
-      {star}
       <Tooltip content={tooltipContent} position="right" arrow={true} delay={500}>
         {buttonElement}
       </Tooltip>

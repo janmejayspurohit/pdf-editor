@@ -24,33 +24,6 @@ interface SettingsSearchOption {
 const SETTINGS_SEARCH_TRANSLATION_PREFIXES: Partial<Record<string, string[]>> = {
   general: ['settings.general'],
   hotkeys: ['settings.hotkeys'],
-  account: ['account'],
-  people: ['settings.workspace'],
-  teams: ['settings.workspace', 'settings.team'],
-  'api-keys': ['settings.developer'],
-  connectionMode: ['settings.connection'],
-  planBilling: ['settings.planBilling'],
-  adminGeneral: ['admin.settings.general'],
-  adminFeatures: ['admin.settings.features'],
-  adminEndpoints: ['admin.settings.endpoints'],
-  adminDatabase: ['admin.settings.database'],
-  adminAdvanced: ['admin.settings.advanced'],
-  adminSecurity: ['admin.settings.security'],
-  adminConnections: [
-    'admin.settings.connections',
-    'admin.settings.mail',
-    'admin.settings.security',
-    'admin.settings.telegram',
-    'admin.settings.premium',
-    'admin.settings.general',
-    'settings.securityAuth',
-    'settings.connection',
-  ],
-  adminPlan: ['settings.planBilling', 'admin.settings.premium', 'settings.licensingAnalytics'],
-  adminAudit: ['settings.licensingAnalytics'],
-  adminUsage: ['settings.licensingAnalytics'],
-  adminLegal: ['admin.settings.legal'],
-  adminPrivacy: ['admin.settings.privacy'],
 };
 
 const getTranslationPrefixesForNavKey = (key: string): string[] => {

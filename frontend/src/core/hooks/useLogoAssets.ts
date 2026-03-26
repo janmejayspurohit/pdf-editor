@@ -21,9 +21,9 @@ export function useLogoAssets() {
       logo192: `${folderPath}/logo192.png`,
       logo512: `${folderPath}/logo512.png`,
       wordmark: {
-        white: `${folderPath}/StirlingPDFLogoWhiteText.svg`,
-        black: `${folderPath}/StirlingPDFLogoBlackText.svg`,
-        grey: `${folderPath}/StirlingPDFLogoGreyText.svg`,
+        white: `${folderPath}/logo-wordmark-white.svg`,
+        black: `${folderPath}/logo-wordmark-black.svg`,
+        grey: `${folderPath}/logo-wordmark-grey.svg`,
       },
       manifestHref: logoVariant === 'classic'
         ? `${BASE_PATH}/manifest-classic.json`

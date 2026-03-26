@@ -79,11 +79,6 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>; // Filtered by search
   isPanelVisible: boolean;
 
-  // Tool History
-  favoriteTools: ToolId[];
-  toggleFavorite: (toolId: ToolId) => void;
-  isFavorite: (toolId: ToolId) => boolean;
-
   customWorkbenchViews: CustomWorkbenchViewInstance[];
   registerCustomWorkbenchView: (view: CustomWorkbenchViewRegistration) => void;
   unregisterCustomWorkbenchView: (id: string) => void;
@@ -124,9 +119,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
   // Tool history hook
   const {
-    favoriteTools,
-    toggleFavorite,
-    isFavorite,
+    recentTools: _recentTools,
   } = useToolHistory();
 
   // Get selected tool from navigation context
@@ -415,11 +408,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     filteredTools,
     isPanelVisible,
 
-    // Tool History
-    favoriteTools,
-    toggleFavorite,
-    isFavorite,
-
     // Custom workbench views
     customWorkbenchViews,
     registerCustomWorkbenchView,
@@ -448,9 +436,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     handleReaderToggle,
     filteredTools,
     isPanelVisible,
-    favoriteTools,
-    toggleFavorite,
-    isFavorite,
     customWorkbenchViews,
     registerCustomWorkbenchView,
     unregisterCustomWorkbenchView,
