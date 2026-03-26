@@ -29,15 +29,12 @@ const UserSelector = ({ value, onChange, placeholder, size = 'sm', disabled = fa
     const fetchUsers = async () => {
       try {
         const response = await apiClient.get('/api/v1/user/users');
-        console.log('Users API response:', response.data);
         const fetchedUsers = response.data || [];
-
-        // Process selectData inside useEffect - group by team
         const usersByTeam: Record<string, SelectItem[]> = {};
 
         fetchedUsers
           .filter((u: UserSummary) => u && u.userId && u.username)
-          .filter((u: UserSummary) => u.teamName?.toLowerCase() !== 'internal') // Exclude internal users
+          .filter((u: UserSummary) => u.teamName?.toLowerCase() !== 'internal')
           .forEach((user: UserSummary) => {
             const teamName = user.teamName || t('certSign.collab.userSelector.noTeam', 'No Team');
             if (!usersByTeam[teamName]) {
@@ -53,13 +50,11 @@ const UserSelector = ({ value, onChange, placeholder, size = 'sm', disabled = fa
             });
           });
 
-        // Convert to Mantine's grouped format
         const processed: GroupedData[] = Object.entries(usersByTeam).map(([teamName, items]) => ({
           group: teamName,
           items: items.sort((a, b) => a.label.localeCompare(b.label)),
         }));
 
-        console.log('Processed selectData:', processed);
         setSelectData(processed);
       } catch (error) {
         console.error('Failed to load users:', error);
@@ -76,19 +71,15 @@ const UserSelector = ({ value, onChange, placeholder, size = 'sm', disabled = fa
     fetchUsers();
   }, [t]);
 
-  // Process stringValue when value prop changes
   useEffect(() => {
     const safeValue = Array.isArray(value) ? value : [];
-    const result = safeValue.map((id) => (id != null ? id.toString() : '')).filter(Boolean);
-    console.log('stringValue for MultiSelect:', result);
-    setStringValue(result);
+    setStringValue(safeValue.map((id) => (id != null ? id.toString() : '')).filter(Boolean));
   }, [value]);
 
   if (loading) {
     return <Loader size="sm" />;
   }
 
-  // No users available — prompt to invite
   if (!selectData || selectData.length === 0) {
     return (
       <Stack gap="xs" align="flex-start">

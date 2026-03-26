@@ -2,7 +2,7 @@
  * URL synchronization hooks for tool routing with registry support
  */
 
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { ToolId } from '@app/types/toolId';
 import { parseToolRoute, updateToolRoute, clearToolRoute } from '@app/utils/urlRouting';
 import { ToolRegistry } from '@app/data/toolsTaxonomy';

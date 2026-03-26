@@ -83,9 +83,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
   // Cleanup any blob URLs when component unmounts
   useEffect(() => {
     return () => {
-      // StoredFileMetadata doesn't have blob URLs, so no cleanup needed
       // Blob URLs are managed by FileContext and tool operations
-      console.log('FileManager unmounting - FileContext handles blob URL cleanup');
     };
   }, []);
 

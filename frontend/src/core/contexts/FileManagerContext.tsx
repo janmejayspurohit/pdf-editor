@@ -197,16 +197,12 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   }, []);
 
   const handleLocalFileClick = useCallback(async () => {
-    console.log('[FileManager] Opening file dialog...');
-
-    // Try native dialog first (desktop), falls back to empty array (web)
     const files = await openFilesFromDisk({
       multiple: true,
       onFallbackOpen: () => fileInputRef.current?.click()
     });
 
     if (files.length > 0) {
-      console.log('[FileManager] Passing files to FileContext:', files.map(f => f.name));
       onNewFilesSelect(files);
 
       await refreshRecentFiles();

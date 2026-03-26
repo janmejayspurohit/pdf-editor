@@ -27,17 +27,14 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
   const { t } = useTranslation();
   const { selectedFiles, selectedFileStubs } = useSelectedFiles();
 
-  // Get the first selected file for preview
   const selectedStub = useMemo(() => {
     return selectedFileStubs.length > 0 ? selectedFileStubs[0] : null;
   }, [selectedFileStubs]);
 
-  // Get the first selected file for PDF processing
   const selectedFile = useMemo(() => {
     return selectedFiles.length > 0 ? selectedFiles[0] : null;
   }, [selectedFiles]);
 
-  // Get thumbnail for the selected file
   const [thumbnail, setThumbnail] = useState<string | null>(null);
   const [pdfBounds, setPdfBounds] = useState<PDFBounds | null>(null);
 
@@ -52,10 +49,7 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
       setThumbnail(selectedStub.thumbnailUrl || null);
 
       try {
-        // Get PDF dimensions from the actual file
         const arrayBuffer = await selectedFile.arrayBuffer();
-
-        // Load PDF to get actual dimensions
         const pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
           disableAutoFetch: true,
           disableStream: true,
@@ -76,11 +70,9 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
           parameters.resetToFullPDF(bounds);
         }
 
-        // Cleanup PDF
         pdfWorkerManager.destroyDocument(pdf);
       } catch (error) {
         console.error('Failed to load PDF dimensions:', error);
-        // Fallback to A4 dimensions if PDF loading fails
         const bounds = calculatePDFBounds(PAGE_SIZES.A4.width, PAGE_SIZES.A4.height, CONTAINER_SIZE, CONTAINER_SIZE);
         setPdfBounds(bounds);
 
@@ -93,18 +85,14 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
     loadPDFDimensions();
   }, [selectedStub, selectedFile, parameters]);
 
-  // Current crop area
   const cropArea = parameters.getCropArea();
 
-
-  // Handle crop area changes from the selector
   const handleCropAreaChange = (newCropArea: Rectangle) => {
     if (pdfBounds) {
       parameters.setCropArea(newCropArea, pdfBounds);
     }
   };
 
-  // Handle manual coordinate input changes
   const handleCoordinateChange = (field: keyof Rectangle, value: number | string) => {
     const numValue = typeof value === 'string' ? parseFloat(value) : value;
     if (isNaN(numValue)) return;
@@ -115,13 +103,11 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
     }
   };
 
-  // Reset to full PDF
   const handleReset = () => {
     if (pdfBounds) {
       parameters.resetToFullPDF(pdfBounds);
     }
   };
-
 
   if (!selectedStub || !pdfBounds) {
     return (

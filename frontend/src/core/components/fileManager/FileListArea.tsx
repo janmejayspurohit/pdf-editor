@@ -52,7 +52,6 @@ const FileListArea: React.FC<FileListAreaProps> = ({
             </Center>
           ) : (
             filteredFiles.map((file, index) => {
-              // All files in filteredFiles are now leaf files only
               const historyFiles = loadedHistoryFiles.get(file.id) || [];
               const isExpanded = expandedFileIds.has(file.id);
               const isActive = activeFileIds.includes(file.id);
@@ -67,8 +66,8 @@ const FileListArea: React.FC<FileListAreaProps> = ({
                     onRemove={() => onFileRemove(index)}
                     onDownload={() => onDownloadSingle(file)}
                     onDoubleClick={() => onFileDoubleClick(file)}
-                    isHistoryFile={false} // All files here are leaf files
-                    isLatestVersion={true} // All files here are the latest versions
+                    isHistoryFile={false}
+                    isLatestVersion={true}
                     isActive={isActive}
                   />
 
