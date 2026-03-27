@@ -48,7 +48,6 @@ const FormFill = (_props: BaseToolProps) => {
     setActiveField,
     validateForm,
     fieldTextStyles,
-    fieldApplyTextStyle,
   } = useFormFill();
 
   const allValues = useAllFormValues();
@@ -165,14 +164,8 @@ const FormFill = (_props: BaseToolProps) => {
     try {
       let filledBlob = await submitForm(currentFile, flatten);
 
-      const activeFieldStyles = Object.fromEntries(
-        Object.entries(fieldApplyTextStyle)
-          .filter(([, apply]) => apply)
-          .map(([name]) => [name, fieldTextStyles[name]])
-          .filter(([, style]) => style != null)
-      );
-      if (Object.keys(activeFieldStyles).length > 0) {
-        filledBlob = await applyFieldTextStyles(filledBlob, activeFieldStyles);
+      if (Object.keys(fieldTextStyles).length > 0) {
+        filledBlob = await applyFieldTextStyles(filledBlob, fieldTextStyles);
       }
 
       // Track the flatten value at save so toggling it later re-enables Save
@@ -196,7 +189,7 @@ const FormFill = (_props: BaseToolProps) => {
       savingRef.current = false;
       setSaving(false);
     }
-  }, [currentFile, submitForm, flatten, validateForm, fieldApplyTextStyle, fieldTextStyles]);
+  }, [currentFile, submitForm, flatten, validateForm, fieldTextStyles]);
 
   // Keyboard shortcut: Ctrl+S to save
   const flattenChangedRef = useRef(flattenChanged);

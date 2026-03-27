@@ -224,9 +224,6 @@ export interface FormFillContextValue {
   /** Per-field text style options keyed by field name */
   fieldTextStyles: Record<string, TextStyleOptions>;
   setFieldTextStyle: (fieldName: string, style: TextStyleOptions) => void;
-  /** Per-field flag: whether to bake text style into this field on save */
-  fieldApplyTextStyle: Record<string, boolean>;
-  setFieldApplyTextStyle: (fieldName: string, apply: boolean) => void;
 }
 
 const FormFillContext = createContext<FormFillContextValue | null>(null);
@@ -332,7 +329,6 @@ export function FormFillProvider({
 
   // Per-field text style options
   const [fieldTextStyles, setFieldTextStylesState] = useState<Record<string, TextStyleOptions>>({});
-  const [fieldApplyTextStyle, setFieldApplyTextStyleState] = useState<Record<string, boolean>>({});
 
   const fetchFields = useCallback(async (file: File | Blob, fileId?: string) => {
     // Increment version so any in-flight fetch for a previous file is discarded.
@@ -463,13 +459,6 @@ export function FormFillProvider({
     [],
   );
 
-  const setFieldApplyTextStyle = useCallback(
-    (fieldName: string, apply: boolean) => {
-      setFieldApplyTextStyleState((prev) => ({ ...prev, [fieldName]: apply }));
-    },
-    [],
-  );
-
   const submitForm = useCallback(
     async (file: File | Blob, flatten = false) => {
       const blob = await providerRef.current.fillForm(
@@ -533,7 +522,6 @@ export function FormFillProvider({
     valuesStore.reset({});
     setSignatureImagesState({});
     setFieldTextStylesState({});
-    setFieldApplyTextStyleState({});
     dispatch({ type: 'RESET' });
   }, [valuesStore]);
 
@@ -570,8 +558,6 @@ export function FormFillProvider({
       clearSignatureImage,
       fieldTextStyles,
       setFieldTextStyle,
-      fieldApplyTextStyle,
-      setFieldApplyTextStyle,
     }),
     [
       state,
@@ -593,8 +579,6 @@ export function FormFillProvider({
       clearSignatureImage,
       fieldTextStyles,
       setFieldTextStyle,
-      fieldApplyTextStyle,
-      setFieldApplyTextStyle,
     ]
   );
 

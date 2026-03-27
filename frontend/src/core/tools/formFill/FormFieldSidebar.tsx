@@ -7,7 +7,6 @@ import {
   Collapse,
   Tooltip,
   ActionIcon,
-  Switch,
   Select,
   NumberInput,
   ColorInput,
@@ -40,7 +39,7 @@ export function FormFieldSidebar({
   visible,
   onToggle,
 }: FormFieldSidebarProps) {
-  const { state, setValue, setActiveField, fieldTextStyles, setFieldTextStyle, fieldApplyTextStyle, setFieldApplyTextStyle } = useFormFill();
+  const { state, setValue, setActiveField, fieldTextStyles, setFieldTextStyle } = useFormFill();
   const { fields, activeFieldName, loading } = state;
   const activeFieldRef = useRef<HTMLDivElement>(null);
   const [styleOpenFor, setStyleOpenFor] = useState<string | null>(null);
@@ -214,18 +213,9 @@ export function FormFieldSidebar({
                       {field.type === 'text' && (
                         <Collapse in={styleOpenFor === field.name} onClick={(e) => e.stopPropagation()}>
                           <div className={styles.textStylePanel}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                              <Text size="xs" fw={500}>Apply on save</Text>
-                              <Switch
-                                checked={!!fieldApplyTextStyle[field.name]}
-                                onChange={(e) => setFieldApplyTextStyle(field.name, e.currentTarget.checked)}
-                                size="xs"
-                                ml="auto"
-                              />
-                            </div>
                             {(() => {
                               const s = fieldTextStyles[field.name] ?? DEFAULT_TEXT_STYLE;
-                              const enabled = !!fieldApplyTextStyle[field.name];
+                              const enabled = true;
                               return (
                                 <>
                                   <Select
