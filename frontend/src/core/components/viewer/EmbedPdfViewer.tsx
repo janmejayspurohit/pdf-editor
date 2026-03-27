@@ -23,7 +23,6 @@ import { RulerOverlay, type PageMeasureScales, type PageScaleInfo, type Viewport
 import type { PDFDict, PDFNumber } from '@cantoo/pdf-lib';
 import { useWheelZoom } from '@app/hooks/useWheelZoom';
 import { useFormFill } from '@app/tools/formFill/FormFillContext';
-import { FormSaveBar } from '@app/tools/formFill/FormSaveBar';
 
 // ─── Measure dictionary extraction ────────────────────────────────────────────
 
@@ -992,12 +991,6 @@ const EmbedPdfViewerContent = ({
                 // Handle signature added - for debugging, enable console logs as needed
                 // Future: Handle signature completion
               }}
-            />
-            {/* Floating save bar for form-filled PDFs (like Chrome/Firefox PDF viewers) */}
-            <FormSaveBar
-              file={currentFile ?? null}
-              isFormFillToolActive={isFormFillToolActive}
-              onApply={handleFormApply}
             />
             <StampPlacementOverlay
               containerRef={pdfContainerRef}
