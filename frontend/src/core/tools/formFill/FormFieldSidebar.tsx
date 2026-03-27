@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import {
   Box,
   Text,
@@ -7,7 +7,6 @@ import {
   Tooltip,
   ActionIcon,
   Switch,
-  Collapse,
   Select,
   NumberInput,
   ColorInput,
@@ -43,7 +42,6 @@ export function FormFieldSidebar({
   const { state, setValue, setActiveField, textStyle, setTextStyle, applyTextStyle, setApplyTextStyle } = useFormFill();
   const { fields, activeFieldName, loading } = state;
   const activeFieldRef = useRef<HTMLDivElement>(null);
-  const [textStyleOpen, setTextStyleOpen] = useState(false);
 
   useEffect(() => {
     if (activeFieldName && activeFieldRef.current) {
@@ -130,116 +128,108 @@ export function FormFieldSidebar({
           flexShrink: 0,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+          <TextFormatIcon sx={{ fontSize: 16, opacity: 0.7 }} />
+          <Text fw={600} size="xs">Text Style</Text>
           <Switch
-            label="Apply text style on save"
             checked={applyTextStyle}
-            onChange={(e) => {
-              setApplyTextStyle(e.currentTarget.checked);
-              if (e.currentTarget.checked) setTextStyleOpen(true);
-            }}
+            onChange={(e) => setApplyTextStyle(e.currentTarget.checked)}
             size="xs"
-            styles={{ label: { fontSize: '0.75rem', cursor: 'pointer' } }}
+            ml="auto"
           />
-          {applyTextStyle && (
-            <ActionIcon
-              size="xs"
-              variant="subtle"
-              onClick={() => setTextStyleOpen((o) => !o)}
-              aria-label="Toggle text style panel"
-            >
-              <TextFormatIcon sx={{ fontSize: 14 }} />
-            </ActionIcon>
-          )}
         </div>
-
-        <Collapse in={applyTextStyle && textStyleOpen}>
-          <div className={styles.textStylePanel}>
-            <Select
-              label="Font"
+        <div className={styles.textStylePanel}>
+          <Select
+            label="Font"
+            size="xs"
+            data={FONT_OPTIONS}
+            value={textStyle.fontFamily}
+            onChange={(v) => setTextStyle({ ...textStyle, fontFamily: v ?? 'Helvetica' })}
+            allowDeselect={false}
+            disabled={!applyTextStyle}
+          />
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
+            <NumberInput
+              label="Size"
               size="xs"
-              data={FONT_OPTIONS}
-              value={textStyle.fontFamily}
-              onChange={(v) => setTextStyle({ ...textStyle, fontFamily: v ?? 'Helvetica' })}
-              allowDeselect={false}
+              min={4}
+              max={72}
+              value={textStyle.fontSize}
+              onChange={(v) => setTextStyle({ ...textStyle, fontSize: Number(v) || 12 })}
+              style={{ flex: 1 }}
+              disabled={!applyTextStyle}
             />
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
-              <NumberInput
-                label="Size"
-                size="xs"
-                min={4}
-                max={72}
-                value={textStyle.fontSize}
-                onChange={(v) => setTextStyle({ ...textStyle, fontSize: Number(v) || 12 })}
-                style={{ flex: 1 }}
-              />
-              <div style={{ display: 'flex', gap: '0.25rem', paddingBottom: '0.15rem' }}>
-                <Tooltip label="Bold" withArrow>
-                  <ActionIcon
-                    size="sm"
-                    variant={textStyle.bold ? 'filled' : 'light'}
-                    color={textStyle.bold ? 'blue' : 'gray'}
-                    onClick={() => setTextStyle({ ...textStyle, bold: !textStyle.bold })}
-                    aria-label="Bold"
-                  >
-                    <FormatBoldIcon sx={{ fontSize: 14 }} />
-                  </ActionIcon>
-                </Tooltip>
-                <Tooltip label="Italic" withArrow>
-                  <ActionIcon
-                    size="sm"
-                    variant={textStyle.italic ? 'filled' : 'light'}
-                    color={textStyle.italic ? 'blue' : 'gray'}
-                    onClick={() => setTextStyle({ ...textStyle, italic: !textStyle.italic })}
-                    aria-label="Italic"
-                  >
-                    <FormatItalicIcon sx={{ fontSize: 14 }} />
-                  </ActionIcon>
-                </Tooltip>
-              </div>
-            </div>
-            <ColorInput
-              label="Color"
-              size="xs"
-              value={textStyle.textColor}
-              onChange={(v) => setTextStyle({ ...textStyle, textColor: v })}
-              format="hex"
-              swatches={['#000000', '#1e3a5f', '#c0392b', '#27ae60', '#8e44ad', '#e67e22']}
-            />
-            <div>
-              <Text size="xs" fw={500} mb={4}>Alignment</Text>
-              <SegmentedControl
-                size="xs"
-                fullWidth
-                value={textStyle.textAlign}
-                onChange={(v) =>
-                  setTextStyle({ ...textStyle, textAlign: v as TextStyleOptions['textAlign'] })
-                }
-                data={[
-                  { label: 'Left', value: 'left' },
-                  { label: 'Center', value: 'center' },
-                  { label: 'Right', value: 'right' },
-                ]}
-              />
-            </div>
-            <div>
-              <Text size="xs" fw={500} mb={4}>Transform</Text>
-              <SegmentedControl
-                size="xs"
-                fullWidth
-                value={textStyle.textTransform}
-                onChange={(v) =>
-                  setTextStyle({ ...textStyle, textTransform: v as TextStyleOptions['textTransform'] })
-                }
-                data={[
-                  { label: 'None', value: 'none' },
-                  { label: 'UPPER', value: 'uppercase' },
-                  { label: 'lower', value: 'lowercase' },
-                ]}
-              />
+            <div style={{ display: 'flex', gap: '0.25rem', paddingBottom: '0.15rem' }}>
+              <Tooltip label="Bold" withArrow>
+                <ActionIcon
+                  size="sm"
+                  variant={textStyle.bold ? 'filled' : 'light'}
+                  color={textStyle.bold ? 'blue' : 'gray'}
+                  onClick={() => setTextStyle({ ...textStyle, bold: !textStyle.bold })}
+                  aria-label="Bold"
+                  disabled={!applyTextStyle}
+                >
+                  <FormatBoldIcon sx={{ fontSize: 14 }} />
+                </ActionIcon>
+              </Tooltip>
+              <Tooltip label="Italic" withArrow>
+                <ActionIcon
+                  size="sm"
+                  variant={textStyle.italic ? 'filled' : 'light'}
+                  color={textStyle.italic ? 'blue' : 'gray'}
+                  onClick={() => setTextStyle({ ...textStyle, italic: !textStyle.italic })}
+                  aria-label="Italic"
+                  disabled={!applyTextStyle}
+                >
+                  <FormatItalicIcon sx={{ fontSize: 14 }} />
+                </ActionIcon>
+              </Tooltip>
             </div>
           </div>
-        </Collapse>
+          <ColorInput
+            label="Color"
+            size="xs"
+            value={textStyle.textColor}
+            onChange={(v) => setTextStyle({ ...textStyle, textColor: v })}
+            format="hex"
+            swatches={['#000000', '#1e3a5f', '#c0392b', '#27ae60', '#8e44ad', '#e67e22']}
+            disabled={!applyTextStyle}
+          />
+          <div>
+            <Text size="xs" fw={500} mb={4} c={!applyTextStyle ? 'dimmed' : undefined}>Alignment</Text>
+            <SegmentedControl
+              size="xs"
+              fullWidth
+              value={textStyle.textAlign}
+              onChange={(v) =>
+                setTextStyle({ ...textStyle, textAlign: v as TextStyleOptions['textAlign'] })
+              }
+              data={[
+                { label: 'Left', value: 'left' },
+                { label: 'Center', value: 'center' },
+                { label: 'Right', value: 'right' },
+              ]}
+              disabled={!applyTextStyle}
+            />
+          </div>
+          <div>
+            <Text size="xs" fw={500} mb={4} c={!applyTextStyle ? 'dimmed' : undefined}>Transform</Text>
+            <SegmentedControl
+              size="xs"
+              fullWidth
+              value={textStyle.textTransform}
+              onChange={(v) =>
+                setTextStyle({ ...textStyle, textTransform: v as TextStyleOptions['textTransform'] })
+              }
+              data={[
+                { label: 'None', value: 'none' },
+                { label: 'UPPER', value: 'uppercase' },
+                { label: 'lower', value: 'lowercase' },
+              ]}
+              disabled={!applyTextStyle}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Content */}
