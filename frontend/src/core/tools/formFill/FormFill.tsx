@@ -9,6 +9,11 @@ import {
   Progress,
   Tooltip,
   ActionIcon,
+  Collapse,
+  Select,
+  NumberInput,
+  ColorInput,
+  SegmentedControl,
 } from '@mantine/core';
 import { useFormFill, useAllFormValues } from '@app/tools/formFill/FormFillContext';
 import { useNavigation } from '@app/contexts/NavigationContext';
@@ -25,11 +30,22 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import DescriptionIcon from '@mui/icons-material/Description';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import TextFormatIcon from '@mui/icons-material/TextFormat';
+import FormatBoldIcon from '@mui/icons-material/FormatBold';
+import FormatItalicIcon from '@mui/icons-material/FormatItalic';
 import {
   extractFormFieldsCsv,
   extractFormFieldsXlsx,
   applyFieldTextStyles,
+  type TextStyleOptions,
 } from '@app/tools/formFill/formApi';
+import { DEFAULT_TEXT_STYLE } from '@app/tools/formFill/FormFillContext';
+
+const FONT_OPTIONS = [
+  { value: 'Helvetica', label: 'Helvetica' },
+  { value: 'Times', label: 'Times' },
+  { value: 'Courier', label: 'Courier' },
+];
 import styles from '@app/tools/formFill/FormFill.module.css';
 
 // ---------------------------------------------------------------------------
@@ -48,6 +64,7 @@ const FormFill = (_props: BaseToolProps) => {
     setActiveField,
     validateForm,
     fieldTextStyles,
+    setFieldTextStyle,
   } = useFormFill();
 
   const allValues = useAllFormValues();
@@ -60,6 +77,7 @@ const FormFill = (_props: BaseToolProps) => {
   const [extracting, setExtracting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  const [styleOpenFor, setStyleOpenFor] = useState<string | null>(null);
   const [lastSavedFlatten, setLastSavedFlatten] = useState<boolean | null>(null);
   const flattenChanged = lastSavedFlatten !== null && flatten !== lastSavedFlatten;
 
@@ -486,6 +504,23 @@ const FormFill = (_props: BaseToolProps) => {
                         {field.required && (
                           <span className={styles.fieldRequired}>req</span>
                         )}
+                        {field.type === 'text' && (
+                          <Tooltip label="Text style" withArrow position="left">
+                            <ActionIcon
+                              size="xs"
+                              variant={fieldTextStyles[field.name] ? 'filled' : 'subtle'}
+                              color={fieldTextStyles[field.name] ? 'blue' : 'gray'}
+                              ml="auto"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setStyleOpenFor((p) => p === field.name ? null : field.name);
+                              }}
+                              aria-label="Text style"
+                            >
+                              <TextFormatIcon sx={{ fontSize: 12 }} />
+                            </ActionIcon>
+                          </Tooltip>
+                        )}
                       </div>
 
                       {field.type !== 'button' && field.type !== 'signature' && (
@@ -495,6 +530,65 @@ const FormFill = (_props: BaseToolProps) => {
                             onValueChange={handleValueChange}
                           />
                         </div>
+                      )}
+
+                      {field.type === 'text' && (
+                        <Collapse in={styleOpenFor === field.name} onClick={(e) => e.stopPropagation()}>
+                          {(() => {
+                            const s: TextStyleOptions = fieldTextStyles[field.name] ?? DEFAULT_TEXT_STYLE;
+                            return (
+                              <div className={styles.textStylePanel}>
+                                <Select
+                                  label="Font"
+                                  size="xs"
+                                  data={FONT_OPTIONS}
+                                  value={s.fontFamily}
+                                  onChange={(v) => setFieldTextStyle(field.name, { ...s, fontFamily: v ?? 'Helvetica' })}
+                                  allowDeselect={false}
+                                />
+                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
+                                  <NumberInput
+                                    label="Size"
+                                    size="xs"
+                                    min={4}
+                                    max={72}
+                                    value={s.fontSize}
+                                    onChange={(v) => setFieldTextStyle(field.name, { ...s, fontSize: Number(v) || 12 })}
+                                    style={{ flex: 1 }}
+                                  />
+                                  <div style={{ display: 'flex', gap: '0.25rem', paddingBottom: '0.15rem' }}>
+                                    <Tooltip label="Bold" withArrow>
+                                      <ActionIcon size="sm" variant={s.bold ? 'filled' : 'light'} color={s.bold ? 'blue' : 'gray'} onClick={() => setFieldTextStyle(field.name, { ...s, bold: !s.bold })} aria-label="Bold">
+                                        <FormatBoldIcon sx={{ fontSize: 14 }} />
+                                      </ActionIcon>
+                                    </Tooltip>
+                                    <Tooltip label="Italic" withArrow>
+                                      <ActionIcon size="sm" variant={s.italic ? 'filled' : 'light'} color={s.italic ? 'blue' : 'gray'} onClick={() => setFieldTextStyle(field.name, { ...s, italic: !s.italic })} aria-label="Italic">
+                                        <FormatItalicIcon sx={{ fontSize: 14 }} />
+                                      </ActionIcon>
+                                    </Tooltip>
+                                  </div>
+                                </div>
+                                <ColorInput
+                                  label="Color"
+                                  size="xs"
+                                  value={s.textColor}
+                                  onChange={(v) => setFieldTextStyle(field.name, { ...s, textColor: v })}
+                                  format="hex"
+                                  swatches={['#000000', '#1e3a5f', '#c0392b', '#27ae60', '#8e44ad', '#e67e22']}
+                                />
+                                <div>
+                                  <Text size="xs" fw={500} mb={4}>Alignment</Text>
+                                  <SegmentedControl size="xs" fullWidth value={s.textAlign} onChange={(v) => setFieldTextStyle(field.name, { ...s, textAlign: v as TextStyleOptions['textAlign'] })} data={[{ label: 'Left', value: 'left' }, { label: 'Center', value: 'center' }, { label: 'Right', value: 'right' }]} />
+                                </div>
+                                <div>
+                                  <Text size="xs" fw={500} mb={4}>Transform</Text>
+                                  <SegmentedControl size="xs" fullWidth value={s.textTransform} onChange={(v) => setFieldTextStyle(field.name, { ...s, textTransform: v as TextStyleOptions['textTransform'] })} data={[{ label: 'None', value: 'none' }, { label: 'UPPER', value: 'uppercase' }, { label: 'lower', value: 'lowercase' }]} />
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </Collapse>
                       )}
 
                       {hasError && (
