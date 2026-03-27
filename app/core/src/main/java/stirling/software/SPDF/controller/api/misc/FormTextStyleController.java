@@ -2,9 +2,11 @@ package stirling.software.SPDF.controller.api.misc;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.pdfbox.cos.COSName;
@@ -23,6 +25,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,9 +46,11 @@ import stirling.software.common.util.WebResponseUtils;
 public class FormTextStyleController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final ObjectMapper objectMapper;
 
-    public FormTextStyleController(CustomPDFDocumentFactory pdfDocumentFactory) {
+    public FormTextStyleController(CustomPDFDocumentFactory pdfDocumentFactory, ObjectMapper objectMapper) {
         this.pdfDocumentFactory = pdfDocumentFactory;
+        this.objectMapper = objectMapper;
     }
 
     @PostMapping(value = "/apply-form-text-style", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -125,6 +133,88 @@ public class FormTextStyleController {
                             "_styled.pdf");
             return WebResponseUtils.bytesToWebResponse(baos.toByteArray(), outputName);
         }
+    }
+
+    @PostMapping(value = "/apply-field-text-styles", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Apply per-field text styles to PDF form fields")
+    public ResponseEntity<byte[]> applyFieldTextStyles(
+            @RequestParam("fileInput") MultipartFile fileInput,
+            @RequestParam("fieldStyles") String fieldStylesJson)
+            throws IOException {
+
+        Map<String, FieldStyleEntry> fieldStyles =
+                objectMapper.readValue(fieldStylesJson, new TypeReference<Map<String, FieldStyleEntry>>() {});
+
+        try (PDDocument document = pdfDocumentFactory.load(fileInput, true)) {
+            PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
+            if (acroForm == null || acroForm.getFields().isEmpty()) {
+                return WebResponseUtils.multiPartFileToWebResponse(fileInput);
+            }
+
+            if (acroForm.getDefaultResources() == null) {
+                acroForm.setDefaultResources(new PDResources());
+            }
+
+            Map<String, String> fontAliasCache = new HashMap<>();
+            for (FieldStyleEntry entry : fieldStyles.values()) {
+                String cacheKey = entry.fontFamily + "|" + entry.bold + "|" + entry.italic;
+                if (!fontAliasCache.containsKey(cacheKey)) {
+                    String alias = ensureAndResolveFontAlias(acroForm, entry.fontFamily, entry.bold, entry.italic);
+                    fontAliasCache.put(cacheKey, alias);
+                }
+            }
+
+            int updated = 0;
+            for (PDField field : acroForm.getFieldTree()) {
+                if (!(field instanceof PDTextField textField)) {
+                    continue;
+                }
+
+                String fqName = trimToNull(textField.getFullyQualifiedName());
+                String partialName = trimToNull(textField.getPartialName());
+                FieldStyleEntry entry = fieldStyles.get(fqName);
+                if (entry == null) {
+                    entry = fieldStyles.get(partialName);
+                }
+                if (entry == null) {
+                    continue;
+                }
+
+                String cacheKey = entry.fontFamily + "|" + entry.bold + "|" + entry.italic;
+                String fontAlias = fontAliasCache.get(cacheKey);
+
+                textField.setQ(toQuadding(entry.textAlign));
+                textField.setDefaultAppearance("/" + fontAlias + " " + entry.fontSize + " Tf " + toRgbOperands(entry.textColor) + " rg");
+                textField.setValue(transformText(textField.getValueAsString(), entry.textTransform));
+                updated++;
+            }
+
+            if (updated > 0) {
+                acroForm.refreshAppearances();
+                acroForm.setNeedAppearances(false);
+            }
+
+            log.info("apply-field-text-styles result: updatedFields={}", updated);
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            document.save(baos);
+            String outputName =
+                    GeneralUtils.generateFilename(
+                            Filenames.toSimpleFileName(fileInput.getOriginalFilename()),
+                            "_styled.pdf");
+            return WebResponseUtils.bytesToWebResponse(baos.toByteArray(), outputName);
+        }
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private static class FieldStyleEntry {
+        public String fontFamily = "Helvetica";
+        public float fontSize = 14f;
+        public String textColor = "#000000";
+        public boolean bold = false;
+        public boolean italic = false;
+        public String textAlign = "left";
+        public String textTransform = "none";
     }
 
     private static String ensureAndResolveFontAlias(

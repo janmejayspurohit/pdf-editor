@@ -221,12 +221,12 @@ export interface FormFillContextValue {
   setSignatureImage: (fieldName: string, dataUrl: string) => void;
   /** Clear a user-drawn signature image for a field */
   clearSignatureImage: (fieldName: string) => void;
-  /** Text style options to bake into the PDF on save */
-  textStyle: TextStyleOptions;
-  setTextStyle: (style: TextStyleOptions) => void;
-  /** Whether to apply text style on the next save */
-  applyTextStyle: boolean;
-  setApplyTextStyle: (apply: boolean) => void;
+  /** Per-field text style options keyed by field name */
+  fieldTextStyles: Record<string, TextStyleOptions>;
+  setFieldTextStyle: (fieldName: string, style: TextStyleOptions) => void;
+  /** Per-field flag: whether to bake text style into this field on save */
+  fieldApplyTextStyle: Record<string, boolean>;
+  setFieldApplyTextStyle: (fieldName: string, apply: boolean) => void;
 }
 
 const FormFillContext = createContext<FormFillContextValue | null>(null);
@@ -330,9 +330,9 @@ export function FormFillProvider({
   // Signature images: fieldName → data URL (user-drawn or uploaded)
   const [signatureImages, setSignatureImagesState] = useState<Record<string, string>>({});
 
-  // Text style options shared across FormFieldSidebar and FormSaveBar
-  const [textStyle, setTextStyle] = useState<TextStyleOptions>(DEFAULT_TEXT_STYLE);
-  const [applyTextStyle, setApplyTextStyle] = useState(false);
+  // Per-field text style options
+  const [fieldTextStyles, setFieldTextStylesState] = useState<Record<string, TextStyleOptions>>({});
+  const [fieldApplyTextStyle, setFieldApplyTextStyleState] = useState<Record<string, boolean>>({});
 
   const fetchFields = useCallback(async (file: File | Blob, fileId?: string) => {
     // Increment version so any in-flight fetch for a previous file is discarded.
@@ -456,6 +456,20 @@ export function FormFillProvider({
     [],
   );
 
+  const setFieldTextStyle = useCallback(
+    (fieldName: string, style: TextStyleOptions) => {
+      setFieldTextStylesState((prev) => ({ ...prev, [fieldName]: style }));
+    },
+    [],
+  );
+
+  const setFieldApplyTextStyle = useCallback(
+    (fieldName: string, apply: boolean) => {
+      setFieldApplyTextStyleState((prev) => ({ ...prev, [fieldName]: apply }));
+    },
+    [],
+  );
+
   const submitForm = useCallback(
     async (file: File | Blob, flatten = false) => {
       const blob = await providerRef.current.fillForm(
@@ -518,6 +532,8 @@ export function FormFillProvider({
     setForFileId(null);
     valuesStore.reset({});
     setSignatureImagesState({});
+    setFieldTextStylesState({});
+    setFieldApplyTextStyleState({});
     dispatch({ type: 'RESET' });
   }, [valuesStore]);
 
@@ -552,10 +568,10 @@ export function FormFillProvider({
       signatureImages,
       setSignatureImage,
       clearSignatureImage,
-      textStyle,
-      setTextStyle,
-      applyTextStyle,
-      setApplyTextStyle,
+      fieldTextStyles,
+      setFieldTextStyle,
+      fieldApplyTextStyle,
+      setFieldApplyTextStyle,
     }),
     [
       state,
@@ -575,10 +591,10 @@ export function FormFillProvider({
       signatureImages,
       setSignatureImage,
       clearSignatureImage,
-      textStyle,
-      setTextStyle,
-      applyTextStyle,
-      setApplyTextStyle,
+      fieldTextStyles,
+      setFieldTextStyle,
+      fieldApplyTextStyle,
+      setFieldApplyTextStyle,
     ]
   );
 

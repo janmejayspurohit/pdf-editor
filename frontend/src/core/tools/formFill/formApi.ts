@@ -112,6 +112,27 @@ export async function applyFormTextStyle(
 }
 
 /**
+ * Apply per-field text styles and get back a styled PDF blob.
+ * Calls POST /api/v1/misc/apply-field-text-styles
+ */
+export async function applyFieldTextStyles(
+  file: File | Blob,
+  fieldStyles: Record<string, TextStyleOptions>
+): Promise<Blob> {
+  const formData = new FormData();
+  formData.append('fileInput', file);
+  formData.append(
+    'fieldStyles',
+    new Blob([JSON.stringify(fieldStyles)], { type: 'application/json' })
+  );
+
+  const response = await apiClient.post('/api/v1/misc/apply-field-text-styles', formData, {
+    responseType: 'blob',
+  });
+  return response.data;
+}
+
+/**
  * Extract form fields as XLSX.
  * Calls POST /api/v1/form/extract-xlsx
  */

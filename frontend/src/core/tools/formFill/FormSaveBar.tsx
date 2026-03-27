@@ -16,7 +16,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import SaveIcon from '@mui/icons-material/Save';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import { useFormFill } from '@app/tools/formFill/FormFillContext';
-import { applyFormTextStyle } from '@app/tools/formFill/formApi';
+import { applyFieldTextStyles } from '@app/tools/formFill/formApi';
 
 interface FormSaveBarProps {
   /** The current file being viewed */
@@ -29,7 +29,7 @@ interface FormSaveBarProps {
 
 export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBarProps) {
   const { t } = useTranslation();
-  const { state, submitForm, textStyle, applyTextStyle } = useFormFill();
+  const { state, submitForm, fieldTextStyles, fieldApplyTextStyle } = useFormFill();
   const { fields, isDirty, loading } = state;
   const [saving, setSaving] = useState(false);
   const [applying, setApplying] = useState(false);
@@ -47,8 +47,14 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
     setApplying(true);
     try {
       let filledBlob = await submitForm(file, false);
-      if (applyTextStyle) {
-        filledBlob = await applyFormTextStyle(filledBlob, textStyle);
+      const activeFieldStyles = Object.fromEntries(
+        Object.entries(fieldApplyTextStyle)
+          .filter(([, apply]) => apply)
+          .map(([name]) => [name, fieldTextStyles[name]])
+          .filter(([, style]) => style != null)
+      );
+      if (Object.keys(activeFieldStyles).length > 0) {
+        filledBlob = await applyFieldTextStyles(filledBlob, activeFieldStyles);
       }
       if (onApply) {
         await onApply(filledBlob);
@@ -58,15 +64,21 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
     } finally {
       setApplying(false);
     }
-  }, [file, applying, saving, submitForm, onApply, applyTextStyle, textStyle]);
+  }, [file, applying, saving, submitForm, onApply, fieldApplyTextStyle, fieldTextStyles]);
 
   const handleDownload = useCallback(async () => {
     if (!file || saving || applying) return;
     setSaving(true);
     try {
       let blob = await submitForm(file, false);
-      if (applyTextStyle) {
-        blob = await applyFormTextStyle(blob, textStyle);
+      const activeFieldStyles = Object.fromEntries(
+        Object.entries(fieldApplyTextStyle)
+          .filter(([, apply]) => apply)
+          .map(([name]) => [name, fieldTextStyles[name]])
+          .filter(([, style]) => style != null)
+      );
+      if (Object.keys(activeFieldStyles).length > 0) {
+        blob = await applyFieldTextStyles(blob, activeFieldStyles);
       }
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -81,7 +93,7 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
     } finally {
       setSaving(false);
     }
-  }, [file, saving, applying, submitForm, applyTextStyle, textStyle]);
+  }, [file, saving, applying, submitForm, fieldApplyTextStyle, fieldTextStyles]);
 
   // Don't show when:
   // - formFill tool is active (it has its own save panel)

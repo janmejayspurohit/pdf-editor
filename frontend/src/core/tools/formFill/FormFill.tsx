@@ -9,11 +9,6 @@ import {
   Progress,
   Tooltip,
   ActionIcon,
-  Collapse,
-  Select,
-  NumberInput,
-  ColorInput,
-  SegmentedControl,
 } from '@mantine/core';
 import { useFormFill, useAllFormValues } from '@app/tools/formFill/FormFillContext';
 import { useNavigation } from '@app/contexts/NavigationContext';
@@ -30,22 +25,12 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import DescriptionIcon from '@mui/icons-material/Description';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
-import TextFormatIcon from '@mui/icons-material/TextFormat';
-import FormatBoldIcon from '@mui/icons-material/FormatBold';
-import FormatItalicIcon from '@mui/icons-material/FormatItalic';
 import {
   extractFormFieldsCsv,
   extractFormFieldsXlsx,
-  applyFormTextStyle,
-  type TextStyleOptions,
+  applyFieldTextStyles,
 } from '@app/tools/formFill/formApi';
 import styles from '@app/tools/formFill/FormFill.module.css';
-
-const FONT_OPTIONS = [
-  { value: 'Helvetica', label: 'Helvetica (Sans-serif)' },
-  { value: 'Times', label: 'Times (Serif)' },
-  { value: 'Courier', label: 'Courier (Monospace)' },
-];
 
 // ---------------------------------------------------------------------------
 // Main FormFill component
@@ -62,10 +47,8 @@ const FormFill = (_props: BaseToolProps) => {
     setValue,
     setActiveField,
     validateForm,
-    textStyle,
-    setTextStyle,
-    applyTextStyle,
-    setApplyTextStyle,
+    fieldTextStyles,
+    fieldApplyTextStyle,
   } = useFormFill();
 
   const allValues = useAllFormValues();
@@ -77,7 +60,6 @@ const FormFill = (_props: BaseToolProps) => {
   const [saving, setSaving] = useState(false);
   const [extracting, setExtracting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [textStyleOpen, setTextStyleOpen] = useState(false);
 
   const [lastSavedFlatten, setLastSavedFlatten] = useState<boolean | null>(null);
   const flattenChanged = lastSavedFlatten !== null && flatten !== lastSavedFlatten;
@@ -183,8 +165,14 @@ const FormFill = (_props: BaseToolProps) => {
     try {
       let filledBlob = await submitForm(currentFile, flatten);
 
-      if (applyTextStyle) {
-        filledBlob = await applyFormTextStyle(filledBlob, textStyle);
+      const activeFieldStyles = Object.fromEntries(
+        Object.entries(fieldApplyTextStyle)
+          .filter(([, apply]) => apply)
+          .map(([name]) => [name, fieldTextStyles[name]])
+          .filter(([, style]) => style != null)
+      );
+      if (Object.keys(activeFieldStyles).length > 0) {
+        filledBlob = await applyFieldTextStyles(filledBlob, activeFieldStyles);
       }
 
       // Track the flatten value at save so toggling it later re-enables Save
@@ -208,7 +196,7 @@ const FormFill = (_props: BaseToolProps) => {
       savingRef.current = false;
       setSaving(false);
     }
-  }, [currentFile, submitForm, flatten, validateForm, applyTextStyle, textStyle]);
+  }, [currentFile, submitForm, flatten, validateForm, fieldApplyTextStyle, fieldTextStyles]);
 
   // Keyboard shortcut: Ctrl+S to save
   const flattenChangedRef = useRef(flattenChanged);
@@ -375,119 +363,6 @@ const FormFill = (_props: BaseToolProps) => {
                 label: { fontSize: '0.75rem', cursor: 'pointer' },
               }}
             />
-
-            {/* Text style toggle row */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Switch
-                label="Apply text style"
-                checked={applyTextStyle}
-                onChange={(e) => {
-                  setApplyTextStyle(e.currentTarget.checked);
-                  if (e.currentTarget.checked) setTextStyleOpen(true);
-                }}
-                size="xs"
-                styles={{ label: { fontSize: '0.75rem', cursor: 'pointer' } }}
-              />
-              {applyTextStyle && (
-                <ActionIcon
-                  size="xs"
-                  variant="subtle"
-                  onClick={() => setTextStyleOpen((o) => !o)}
-                  aria-label="Toggle text style panel"
-                >
-                  <TextFormatIcon sx={{ fontSize: 14 }} />
-                </ActionIcon>
-              )}
-            </div>
-
-            {/* Text style panel */}
-            <Collapse in={applyTextStyle && textStyleOpen}>
-              <div className={styles.textStylePanel}>
-                <Select
-                  label="Font"
-                  size="xs"
-                  data={FONT_OPTIONS}
-                  value={textStyle.fontFamily}
-                  onChange={(v) => setTextStyle({ ...textStyle, fontFamily: v ?? 'Helvetica' })}
-                  allowDeselect={false}
-                />
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
-                  <NumberInput
-                    label="Size"
-                    size="xs"
-                    min={4}
-                    max={72}
-                    value={textStyle.fontSize}
-                    onChange={(v) => setTextStyle({ ...textStyle, fontSize: Number(v) || 12 })}
-                    style={{ flex: 1 }}
-                  />
-                  <div style={{ display: 'flex', gap: '0.25rem', paddingBottom: '0.15rem' }}>
-                    <Tooltip label="Bold" withArrow>
-                      <ActionIcon
-                        size="sm"
-                        variant={textStyle.bold ? 'filled' : 'light'}
-                        color={textStyle.bold ? 'blue' : 'gray'}
-                        onClick={() => setTextStyle({ ...textStyle, bold: !textStyle.bold })}
-                        aria-label="Bold"
-                      >
-                        <FormatBoldIcon sx={{ fontSize: 14 }} />
-                      </ActionIcon>
-                    </Tooltip>
-                    <Tooltip label="Italic" withArrow>
-                      <ActionIcon
-                        size="sm"
-                        variant={textStyle.italic ? 'filled' : 'light'}
-                        color={textStyle.italic ? 'blue' : 'gray'}
-                        onClick={() => setTextStyle({ ...textStyle, italic: !textStyle.italic })}
-                        aria-label="Italic"
-                      >
-                        <FormatItalicIcon sx={{ fontSize: 14 }} />
-                      </ActionIcon>
-                    </Tooltip>
-                  </div>
-                </div>
-                <ColorInput
-                  label="Color"
-                  size="xs"
-                  value={textStyle.textColor}
-                  onChange={(v) => setTextStyle({ ...textStyle, textColor: v })}
-                  format="hex"
-                  swatches={['#000000', '#1e3a5f', '#c0392b', '#27ae60', '#8e44ad', '#e67e22']}
-                />
-                <div>
-                  <Text size="xs" fw={500} mb={4}>Alignment</Text>
-                  <SegmentedControl
-                    size="xs"
-                    fullWidth
-                    value={textStyle.textAlign}
-                    onChange={(v) =>
-                      setTextStyle({ ...textStyle, textAlign: v as TextStyleOptions['textAlign'] })
-                    }
-                    data={[
-                      { label: 'Left', value: 'left' },
-                      { label: 'Center', value: 'center' },
-                      { label: 'Right', value: 'right' },
-                    ]}
-                  />
-                </div>
-                <div>
-                  <Text size="xs" fw={500} mb={4}>Transform</Text>
-                  <SegmentedControl
-                    size="xs"
-                    fullWidth
-                    value={textStyle.textTransform}
-                    onChange={(v) =>
-                      setTextStyle({ ...textStyle, textTransform: v as TextStyleOptions['textTransform'] })
-                    }
-                    data={[
-                      { label: 'None', value: 'none' },
-                      { label: 'UPPER', value: 'uppercase' },
-                      { label: 'lower', value: 'lowercase' },
-                    ]}
-                  />
-                </div>
-              </div>
-            </Collapse>
 
             {/* Action buttons */}
             <div className={styles.actionBar}>

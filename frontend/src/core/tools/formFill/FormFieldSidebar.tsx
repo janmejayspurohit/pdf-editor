@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Box,
   Text,
   ScrollArea,
   Badge,
+  Collapse,
   Tooltip,
   ActionIcon,
   Switch,
@@ -12,7 +13,7 @@ import {
   ColorInput,
   SegmentedControl,
 } from '@mantine/core';
-import { useFormFill } from '@app/tools/formFill/FormFillContext';
+import { useFormFill, DEFAULT_TEXT_STYLE } from '@app/tools/formFill/FormFillContext';
 import { FieldInput } from '@app/tools/formFill/FieldInput';
 import { FIELD_TYPE_ICON, FIELD_TYPE_COLOR } from '@app/tools/formFill/fieldMeta';
 import type { FormField } from '@app/tools/formFill/types';
@@ -39,9 +40,10 @@ export function FormFieldSidebar({
   visible,
   onToggle,
 }: FormFieldSidebarProps) {
-  const { state, setValue, setActiveField, textStyle, setTextStyle, applyTextStyle, setApplyTextStyle } = useFormFill();
+  const { state, setValue, setActiveField, fieldTextStyles, setFieldTextStyle, fieldApplyTextStyle, setFieldApplyTextStyle } = useFormFill();
   const { fields, activeFieldName, loading } = state;
   const activeFieldRef = useRef<HTMLDivElement>(null);
+  const [styleOpenFor, setStyleOpenFor] = useState<string | null>(null);
 
   useEffect(() => {
     if (activeFieldName && activeFieldRef.current) {
@@ -120,118 +122,6 @@ export function FormFieldSidebar({
         </ActionIcon>
       </div>
 
-      {/* Text style section */}
-      <div
-        style={{
-          padding: '0.5rem 0.75rem',
-          borderBottom: '1px solid var(--border-subtle, var(--mantine-color-default-border))',
-          flexShrink: 0,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-          <TextFormatIcon sx={{ fontSize: 16, opacity: 0.7 }} />
-          <Text fw={600} size="xs">Text Style</Text>
-          <Switch
-            checked={applyTextStyle}
-            onChange={(e) => setApplyTextStyle(e.currentTarget.checked)}
-            size="xs"
-            ml="auto"
-          />
-        </div>
-        <div className={styles.textStylePanel}>
-          <Select
-            label="Font"
-            size="xs"
-            data={FONT_OPTIONS}
-            value={textStyle.fontFamily}
-            onChange={(v) => setTextStyle({ ...textStyle, fontFamily: v ?? 'Helvetica' })}
-            allowDeselect={false}
-            disabled={!applyTextStyle}
-          />
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
-            <NumberInput
-              label="Size"
-              size="xs"
-              min={4}
-              max={72}
-              value={textStyle.fontSize}
-              onChange={(v) => setTextStyle({ ...textStyle, fontSize: Number(v) || 12 })}
-              style={{ flex: 1 }}
-              disabled={!applyTextStyle}
-            />
-            <div style={{ display: 'flex', gap: '0.25rem', paddingBottom: '0.15rem' }}>
-              <Tooltip label="Bold" withArrow>
-                <ActionIcon
-                  size="sm"
-                  variant={textStyle.bold ? 'filled' : 'light'}
-                  color={textStyle.bold ? 'blue' : 'gray'}
-                  onClick={() => setTextStyle({ ...textStyle, bold: !textStyle.bold })}
-                  aria-label="Bold"
-                  disabled={!applyTextStyle}
-                >
-                  <FormatBoldIcon sx={{ fontSize: 14 }} />
-                </ActionIcon>
-              </Tooltip>
-              <Tooltip label="Italic" withArrow>
-                <ActionIcon
-                  size="sm"
-                  variant={textStyle.italic ? 'filled' : 'light'}
-                  color={textStyle.italic ? 'blue' : 'gray'}
-                  onClick={() => setTextStyle({ ...textStyle, italic: !textStyle.italic })}
-                  aria-label="Italic"
-                  disabled={!applyTextStyle}
-                >
-                  <FormatItalicIcon sx={{ fontSize: 14 }} />
-                </ActionIcon>
-              </Tooltip>
-            </div>
-          </div>
-          <ColorInput
-            label="Color"
-            size="xs"
-            value={textStyle.textColor}
-            onChange={(v) => setTextStyle({ ...textStyle, textColor: v })}
-            format="hex"
-            swatches={['#000000', '#1e3a5f', '#c0392b', '#27ae60', '#8e44ad', '#e67e22']}
-            disabled={!applyTextStyle}
-          />
-          <div>
-            <Text size="xs" fw={500} mb={4} c={!applyTextStyle ? 'dimmed' : undefined}>Alignment</Text>
-            <SegmentedControl
-              size="xs"
-              fullWidth
-              value={textStyle.textAlign}
-              onChange={(v) =>
-                setTextStyle({ ...textStyle, textAlign: v as TextStyleOptions['textAlign'] })
-              }
-              data={[
-                { label: 'Left', value: 'left' },
-                { label: 'Center', value: 'center' },
-                { label: 'Right', value: 'right' },
-              ]}
-              disabled={!applyTextStyle}
-            />
-          </div>
-          <div>
-            <Text size="xs" fw={500} mb={4} c={!applyTextStyle ? 'dimmed' : undefined}>Transform</Text>
-            <SegmentedControl
-              size="xs"
-              fullWidth
-              value={textStyle.textTransform}
-              onChange={(v) =>
-                setTextStyle({ ...textStyle, textTransform: v as TextStyleOptions['textTransform'] })
-              }
-              data={[
-                { label: 'None', value: 'none' },
-                { label: 'UPPER', value: 'uppercase' },
-                { label: 'lower', value: 'lowercase' },
-              ]}
-              disabled={!applyTextStyle}
-            />
-          </div>
-        </div>
-      </div>
-
       {/* Content */}
       <ScrollArea style={{ flex: 1 }}>
         {loading && (
@@ -293,17 +183,106 @@ export function FormFieldSidebar({
                         {field.required && (
                           <span className={styles.fieldRequired}>req</span>
                         )}
+                        {field.type === 'text' && (
+                          <Tooltip label="Text style" withArrow position="left">
+                            <ActionIcon
+                              size="xs"
+                              variant={fieldApplyTextStyle[field.name] ? 'filled' : 'subtle'}
+                              color={fieldApplyTextStyle[field.name] ? 'blue' : 'gray'}
+                              ml="auto"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setStyleOpenFor((prev) => prev === field.name ? null : field.name);
+                              }}
+                              aria-label="Toggle text style"
+                            >
+                              <TextFormatIcon sx={{ fontSize: 12 }} />
+                            </ActionIcon>
+                          </Tooltip>
+                        )}
                       </div>
 
                       {field.type !== 'button' && field.type !== 'signature' && (
-                        <div
-                          className={styles.fieldInputWrap}
-                        >
+                        <div className={styles.fieldInputWrap}>
                           <FieldInput
                             field={field}
                             onValueChange={handleValueChange}
                           />
                         </div>
+                      )}
+
+                      {field.type === 'text' && (
+                        <Collapse in={styleOpenFor === field.name} onClick={(e) => e.stopPropagation()}>
+                          <div className={styles.textStylePanel}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                              <Text size="xs" fw={500}>Apply on save</Text>
+                              <Switch
+                                checked={!!fieldApplyTextStyle[field.name]}
+                                onChange={(e) => setFieldApplyTextStyle(field.name, e.currentTarget.checked)}
+                                size="xs"
+                                ml="auto"
+                              />
+                            </div>
+                            {(() => {
+                              const s = fieldTextStyles[field.name] ?? DEFAULT_TEXT_STYLE;
+                              const enabled = !!fieldApplyTextStyle[field.name];
+                              return (
+                                <>
+                                  <Select
+                                    label="Font"
+                                    size="xs"
+                                    data={FONT_OPTIONS}
+                                    value={s.fontFamily}
+                                    onChange={(v) => setFieldTextStyle(field.name, { ...s, fontFamily: v ?? 'Helvetica' })}
+                                    allowDeselect={false}
+                                    disabled={!enabled}
+                                  />
+                                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
+                                    <NumberInput
+                                      label="Size"
+                                      size="xs"
+                                      min={4}
+                                      max={72}
+                                      value={s.fontSize}
+                                      onChange={(v) => setFieldTextStyle(field.name, { ...s, fontSize: Number(v) || 12 })}
+                                      style={{ flex: 1 }}
+                                      disabled={!enabled}
+                                    />
+                                    <div style={{ display: 'flex', gap: '0.25rem', paddingBottom: '0.15rem' }}>
+                                      <Tooltip label="Bold" withArrow>
+                                        <ActionIcon size="sm" variant={s.bold ? 'filled' : 'light'} color={s.bold ? 'blue' : 'gray'} onClick={() => setFieldTextStyle(field.name, { ...s, bold: !s.bold })} aria-label="Bold" disabled={!enabled}>
+                                          <FormatBoldIcon sx={{ fontSize: 14 }} />
+                                        </ActionIcon>
+                                      </Tooltip>
+                                      <Tooltip label="Italic" withArrow>
+                                        <ActionIcon size="sm" variant={s.italic ? 'filled' : 'light'} color={s.italic ? 'blue' : 'gray'} onClick={() => setFieldTextStyle(field.name, { ...s, italic: !s.italic })} aria-label="Italic" disabled={!enabled}>
+                                          <FormatItalicIcon sx={{ fontSize: 14 }} />
+                                        </ActionIcon>
+                                      </Tooltip>
+                                    </div>
+                                  </div>
+                                  <ColorInput
+                                    label="Color"
+                                    size="xs"
+                                    value={s.textColor}
+                                    onChange={(v) => setFieldTextStyle(field.name, { ...s, textColor: v })}
+                                    format="hex"
+                                    swatches={['#000000', '#1e3a5f', '#c0392b', '#27ae60', '#8e44ad', '#e67e22']}
+                                    disabled={!enabled}
+                                  />
+                                  <div>
+                                    <Text size="xs" fw={500} mb={4}>Alignment</Text>
+                                    <SegmentedControl size="xs" fullWidth value={s.textAlign} onChange={(v) => setFieldTextStyle(field.name, { ...s, textAlign: v as TextStyleOptions['textAlign'] })} data={[{ label: 'Left', value: 'left' }, { label: 'Center', value: 'center' }, { label: 'Right', value: 'right' }]} disabled={!enabled} />
+                                  </div>
+                                  <div>
+                                    <Text size="xs" fw={500} mb={4}>Transform</Text>
+                                    <SegmentedControl size="xs" fullWidth value={s.textTransform} onChange={(v) => setFieldTextStyle(field.name, { ...s, textTransform: v as TextStyleOptions['textTransform'] })} data={[{ label: 'None', value: 'none' }, { label: 'UPPER', value: 'uppercase' }, { label: 'lower', value: 'lowercase' }]} disabled={!enabled} />
+                                  </div>
+                                </>
+                              );
+                            })()}
+                          </div>
+                        </Collapse>
                       )}
 
                       {field.tooltip && (
