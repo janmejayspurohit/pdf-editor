@@ -18,7 +18,7 @@ const LandingPage = () => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
   const { openFilesModal } = useFilesModalContext();
-  const [isUploadHover, setIsUploadHover] = React.useState(false);
+  const [isUploadHover, setIsUploadHover] = React.useState(true);
   const { loadRecentFiles } = useFileManager();
   const [hasRecents, setHasRecents] = React.useState<boolean>(false);
   const [mobileUploadModalOpen, setMobileUploadModalOpen] = React.useState(false);
