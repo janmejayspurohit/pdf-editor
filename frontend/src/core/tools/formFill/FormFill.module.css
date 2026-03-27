@@ -271,6 +271,20 @@
   background: transparent;
 }
 
+.textStylePanel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default, var(--mantine-color-default-border));
+  background: var(--mantine-color-default-hover, rgba(0, 0, 0, 0.03));
+}
+
+:global([data-mantine-color-scheme="dark"]) .textStylePanel {
+  background: rgba(255, 255, 255, 0.03);
+}
+
 .comingSoon {
   flex: 1;
   display: flex;

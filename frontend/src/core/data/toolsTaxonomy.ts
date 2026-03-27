@@ -11,7 +11,6 @@ import RateReviewRoundedIcon from '@mui/icons-material/RateReviewRounded';
 import ViewAgendaRoundedIcon from '@mui/icons-material/ViewAgendaRounded';
 import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded';
 import DeleteSweepRoundedIcon from '@mui/icons-material/DeleteSweepRounded';
-import SmartToyRoundedIcon from '@mui/icons-material/SmartToyRounded';
 import BuildRoundedIcon from '@mui/icons-material/BuildRounded';
 import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
 import { ProprietaryToolId } from '@app/types/proprietaryToolId';
@@ -24,7 +23,6 @@ export enum SubcategoryId {
   PAGE_FORMATTING = 'pageFormatting',
   EXTRACTION = 'extraction',
   REMOVAL = 'removal',
-  AUTOMATION = 'automation',
   GENERAL = 'general',
   ADVANCED_FORMATTING = 'advancedFormatting',
 }
@@ -73,7 +71,6 @@ export const SUBCATEGORY_ORDER: SubcategoryId[] = [
   SubcategoryId.PAGE_FORMATTING,
   SubcategoryId.EXTRACTION,
   SubcategoryId.REMOVAL,
-  SubcategoryId.AUTOMATION,
   SubcategoryId.GENERAL,
   SubcategoryId.ADVANCED_FORMATTING,
 ];
@@ -86,7 +83,6 @@ export const SUBCATEGORY_COLOR_MAP: Record<SubcategoryId, string> = {
   [SubcategoryId.PAGE_FORMATTING]: 'var(--category-color-formatting)',   // Purple
   [SubcategoryId.EXTRACTION]: 'var(--category-color-extraction)',        // Cyan
   [SubcategoryId.REMOVAL]: 'var(--category-color-removal)',           // Red
-  [SubcategoryId.AUTOMATION]: 'var(--category-color-automation)',        // Pink
   [SubcategoryId.GENERAL]: 'var(--category-color-general)',           // Blue
   [SubcategoryId.ADVANCED_FORMATTING]: 'var(--category-color-formatting)', // Purple
 };
@@ -107,8 +103,6 @@ export const getSubcategoryIcon = (subcategory: SubcategoryId): React.ReactNode 
       return React.createElement(FileDownloadRoundedIcon);
     case SubcategoryId.REMOVAL:
       return React.createElement(DeleteSweepRoundedIcon);
-    case SubcategoryId.AUTOMATION:
-      return React.createElement(SmartToyRoundedIcon);
     case SubcategoryId.GENERAL:
       return React.createElement(BuildRoundedIcon);
     case SubcategoryId.ADVANCED_FORMATTING:

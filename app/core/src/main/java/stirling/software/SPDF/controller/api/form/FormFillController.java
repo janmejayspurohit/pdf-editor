@@ -343,16 +343,37 @@ public class FormFillController {
                             example = "{\"field\":\"value\"}")
                     @RequestPart(value = "data", required = false)
                     byte[] valuesPayload,
-            @RequestParam(value = "flatten", defaultValue = "false") boolean flatten)
+            @RequestParam(value = "flatten", defaultValue = "false") boolean flatten,
+            @Parameter(
+                            description =
+                                    "JSON object mapping signature field names to Base64 PNG data URLs",
+                            example = "{\"SignatureField1\":\"data:image/png;base64,...\"}")
+                    @RequestPart(value = "signatureImages", required = false)
+                    byte[] signatureImagesPayload)
             throws IOException {
 
         String rawValues = decodePart(valuesPayload);
         Map<String, Object> values = FormPayloadParser.parseValueMap(objectMapper, rawValues);
 
+        String rawSigImages = decodePart(signatureImagesPayload);
+        Map<String, String> signatureImages = null;
+        if (rawSigImages != null && !rawSigImages.isBlank()) {
+            signatureImages =
+                    objectMapper.readValue(
+                            rawSigImages, new TypeReference<Map<String, String>>() {});
+        }
+        final Map<String, String> finalSigImages = signatureImages;
+
         return processSingleFile(
                 file,
                 "filled",
-                document -> FormUtils.applyFieldValues(document, values, flatten, true));
+                document -> {
+                    // Apply signature appearances before flattening so the widgets still exist.
+                    if (finalSigImages != null && !finalSigImages.isEmpty()) {
+                        FormUtils.applySignatureImages(document, finalSigImages);
+                    }
+                    FormUtils.applyFieldValues(document, values, flatten, true);
+                });
     }
 
     private ResponseEntity<byte[]> processSingleFile(

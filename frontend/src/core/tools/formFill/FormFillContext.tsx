@@ -204,6 +204,12 @@ export interface FormFillContextValue {
   setProviderMode: (mode: 'pdflib' | 'pdfbox') => void;
   /** The file ID that the current form fields belong to (null if no fields loaded) */
   forFileId: string | null;
+  /** User-drawn signature images keyed by field name (data URL strings) */
+  signatureImages: Record<string, string>;
+  /** Store a user-drawn signature image for a field */
+  setSignatureImage: (fieldName: string, dataUrl: string) => void;
+  /** Clear a user-drawn signature image for a field */
+  clearSignatureImage: (fieldName: string) => void;
 }
 
 const FormFillContext = createContext<FormFillContextValue | null>(null);
@@ -303,6 +309,9 @@ export function FormFillProvider({
   // External values store — values live HERE, not in the reducer.
   // This prevents full context re-renders on every keystroke.
   const [valuesStore] = useState(() => new FormValuesStore());
+
+  // Signature images: fieldName → data URL (user-drawn or uploaded)
+  const [signatureImages, setSignatureImagesState] = useState<Record<string, string>>({});
 
   const fetchFields = useCallback(async (file: File | Blob, fileId?: string) => {
     // Increment version so any in-flight fetch for a previous file is discarded.
@@ -407,13 +416,37 @@ export function FormFillProvider({
     []
   );
 
+  const setSignatureImage = useCallback(
+    (fieldName: string, dataUrl: string) => {
+      setSignatureImagesState((prev) => ({ ...prev, [fieldName]: dataUrl }));
+      dispatch({ type: 'MARK_DIRTY' });
+    },
+    [],
+  );
+
+  const clearSignatureImage = useCallback(
+    (fieldName: string) => {
+      setSignatureImagesState((prev) => {
+        const next = { ...prev };
+        delete next[fieldName];
+        return next;
+      });
+    },
+    [],
+  );
+
   const submitForm = useCallback(
     async (file: File | Blob, flatten = false) => {
-      const blob = await providerRef.current.fillForm(file, valuesStore.values, flatten);
+      const blob = await providerRef.current.fillForm(
+        file,
+        valuesStore.values,
+        flatten,
+        signatureImages,
+      );
       dispatch({ type: 'MARK_CLEAN' });
       return blob;
     },
-    [valuesStore]
+    [valuesStore, signatureImages]
   );
 
   const setProviderMode = useCallback(
@@ -463,6 +496,7 @@ export function FormFillProvider({
     forFileIdRef.current = null;
     setForFileId(null);
     valuesStore.reset({});
+    setSignatureImagesState({});
     dispatch({ type: 'RESET' });
   }, [valuesStore]);
 
@@ -494,6 +528,9 @@ export function FormFillProvider({
       activeProviderName: providerRef.current.name,
       setProviderMode,
       forFileId,
+      signatureImages,
+      setSignatureImage,
+      clearSignatureImage,
     }),
     [
       state,
@@ -510,6 +547,9 @@ export function FormFillProvider({
       providerMode,
       setProviderMode,
       forFileId,
+      signatureImages,
+      setSignatureImage,
+      clearSignatureImage,
     ]
   );
 

@@ -98,7 +98,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   isLoading,
   activeFileIds,
 }) => {
-  const [activeSource, setActiveSource] = useState<'recent' | 'local' | 'drive'>('recent');
+  const [activeSource, setActiveSource] = useState<'recent' | 'local' | 'drive'>('local');
   const [storageFilter, setStorageFilter] = useState<
     'all' | 'local' | 'sharedWithMe' | 'sharedByMe'
   >('all');

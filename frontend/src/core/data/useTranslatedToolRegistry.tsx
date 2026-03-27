@@ -701,8 +701,19 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
       },
 
-      // Automation
-
+      autoRename: {
+        icon: <LocalIcon icon="match-word-rounded" width="1.5rem" height="1.5rem" />,
+        name: t("home.autoRename.title", "Auto Rename PDF File"),
+        component: AutoRename,
+        maxFiles: -1,
+        endpoints: ["auto-rename"],
+        operationConfig: autoRenameOperationConfig,
+        description: t("home.autoRename.desc", "Automatically rename PDF files based on their content"),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        synonyms: getSynonyms(t, "autoRename"),
+        automationSettings: null,
+      },
       automate: {
         icon: <LocalIcon icon="automation-outline" width="1.5rem" height="1.5rem" />,
         name: t("home.automate.title", "Automate"),
@@ -712,25 +723,13 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
         ),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.AUTOMATION,
+        subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
         maxFiles: -1,
         supportedFormats: CONVERT_SUPPORTED_FORMATS,
         endpoints: ["automate"],
         synonyms: getSynonyms(t, "automate"),
         automationSettings: null,
-      },
-      autoRename: {
-        icon: <LocalIcon icon="match-word-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.autoRename.title", "Auto Rename PDF File"),
-        component: AutoRename,
-        maxFiles: -1,
-        endpoints: ["auto-rename"],
-        operationConfig: autoRenameOperationConfig,
-        description: t("home.autoRename.desc", "Automatically rename PDF files based on their content"),
-        categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.AUTOMATION,
-        synonyms: getSynonyms(t, "autoRename"),
-        automationSettings: null,
+        supportsAutomate: false,
       },
 
       // Advanced Formatting

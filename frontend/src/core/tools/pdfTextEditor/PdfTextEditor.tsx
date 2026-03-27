@@ -376,7 +376,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     if (!jobId) {
       return;
     }
-    console.log(`[PdfTextEditor] Cleaning up cached document for jobId: ${jobId}`);
     apiClient.post(`/api/v1/convert/pdf/text-editor/clear-cache/${jobId}`).catch((error) => {
       console.warn('[PdfTextEditor] Failed to clear cache:', error);
     });
@@ -386,7 +385,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     // Clear old cached job when job ID changes
     const previousJobId = previousCachedJobIdRef.current;
     if (previousJobId && previousJobId !== cachedJobId) {
-      console.log(`[PdfTextEditor] Clearing old cache for jobId: ${previousJobId}, new jobId: ${cachedJobId}`);
       clearCachedJob(previousJobId);
     }
     // Update the previous jobId ref for next time
@@ -430,7 +428,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         return;
       }
       if (!cachedJobId) {
-        console.log('[loadImagesForPage] No cached jobId, skipping');
         return;
       }
       if (
@@ -448,7 +445,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       });
 
       const pageNumber = pageIndex + 1;
-      const start = performance.now();
 
       try {
         const [pageResponse, pageFontsResponse] = await Promise.all([
@@ -533,15 +529,9 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         });
         loadedImagePagesRef.current.add(pageIndex);
 
-        console.log(
-          `[loadImagesForPage] Loaded ${normalizedImages.length} images for page ${pageNumber} in ${(
-            performance.now() - start
-          ).toFixed(2)}ms`,
-        );
       } catch (error) {
         console.error(`[loadImagesForPage] Failed to load images for page ${pageNumber}:`, error);
         if (isCacheUnavailableError(error)) {
-          console.log('[loadImagesForPage] Cache expired, triggering automatic recovery...');
           // Automatically recover by reloading the file
           void recoverCacheAndReloadRef.current();
         }
@@ -567,7 +557,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       const requestId = loadRequestIdRef.current + 1;
       loadRequestIdRef.current = requestId;
 
-      const _fileKey = getAutoLoadKey(file);
       const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
 
       try {
@@ -587,7 +576,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
           const formData = new FormData();
           formData.append('fileInput', file);
 
-          console.log('Sending conversion request with async=true');
           const response = await apiClient.post(
             `${CONVERSION_ENDPOINTS['pdf-text-editor']}?async=true&lightweight=true`,
             formData,
@@ -596,7 +584,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
             },
           );
 
-          console.log('Conversion response:', response.data);
           const jobId = response.data.jobId;
 
           if (!jobId) {
@@ -605,7 +592,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
           }
 
           pendingJobId = jobId;
-          console.log('Got job ID:', jobId);
           setConversionProgress({
             percent: 3,
             stage: 'processing',
@@ -627,7 +613,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
             try {
               const statusResponse = await apiClient.get(`/api/v1/general/job/${jobId}`);
               const jobStatus = statusResponse.data;
-              console.log(`Job status (attempt ${attempts}):`, jobStatus);
 
               const percent = Math.min(Math.max(jobStatus.progress ?? 0, 0), 100);
               const stage = jobStatus.stage || 'processing';
@@ -648,7 +633,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
                   throw new Error(jobStatus.error);
                 }
 
-                console.log('Job completed, retrieving JSON result...');
                 jobComplete = true;
 
                 const resultResponse = await apiClient.get(
@@ -676,8 +660,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
                 shouldUseLazyMode = Boolean(docResult.lazyImages);
                 pendingJobId = shouldUseLazyMode ? jobId : null;
                 setConversionProgress(null);
-              } else {
-                console.log('Job not complete yet, continuing to poll...');
               }
             } catch (pollError: any) {
               console.error('Error polling job status:', pollError);
@@ -719,12 +701,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
           throw new Error('Failed to parse PDF JSON document');
         }
 
-        console.log(
-          `[PdfTextEditor] Document loaded. Lazy image mode: ${shouldUseLazyMode}, Pages: ${
-            parsed.pages?.length || 0
-          }`,
-        );
-
         if (isPdf) {
           initializePdfPreview(file);
         } else {
@@ -741,11 +717,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         setErrorMessage(null);
       } catch (error: any) {
         console.error('Failed to load file', error);
-        console.error('Error details:', {
-          message: error?.message,
-          response: error?.response?.data,
-          stack: error?.stack,
-        });
 
         if (loadRequestIdRef.current !== requestId) {
           return;
@@ -763,7 +734,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
             error?.message ||
             t('pdfTextEditor.conversionFailed', 'Failed to convert PDF. Please try again.');
           setErrorMessage(errorMsg);
-          console.error('Setting error message:', errorMsg);
         } else {
           setErrorMessage(
             t(
@@ -797,9 +767,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     }
     cacheRecoveryInProgressRef.current = true;
     try {
-      console.log('[PdfTextEditor] Automatically reloading file due to cache expiration...');
       await handleLoadFile(file);
-      console.log('[PdfTextEditor] Cache recovery successful');
       return true;
     } catch (error) {
       console.error('[PdfTextEditor] Cache recovery failed', error);
@@ -847,13 +815,10 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   }, []);
 
   const handleGroupDelete = useCallback((pageIndex: number, groupId: string) => {
-    console.log(`🗑️ Deleting group ${groupId} from page ${pageIndex}`);
     setGroupsByPage((previous) => {
       const updated = previous.map((groups, idx) => {
         if (idx !== pageIndex) return groups;
-        const filtered = groups.filter((group) => group.id !== groupId);
-        console.log(`   Before: ${groups.length} groups, After: ${filtered.length} groups`);
-        return filtered;
+        return groups.filter((group) => group.id !== groupId);
       });
       return updated;
     });
@@ -1540,7 +1505,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
               const bottom = image.bottom ?? image.y ?? 0;
               const width = image.width ?? Math.max((image.right ?? left) - left, 0);
               const height = image.height ?? Math.max((image.top ?? bottom) - bottom, 0);
-              const _right = left + width;
               const top = bottom + height;
 
               // Convert to canvas coordinates (PDF origin is bottom-left, canvas is top-left)
@@ -1708,9 +1672,10 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
 
     hasAutoOpenedWorkbenchRef.current = true;
     // Use timeout to ensure registration effect has run first
-    setTimeout(() => {
+    const timerId = setTimeout(() => {
       navigationActions.setWorkbench(WORKBENCH_ID);
     }, 0);
+    return () => clearTimeout(timerId);
   }, [navigationActions, navigationState.selectedTool]);
 
   // Register workbench view (re-runs when dependencies change)
@@ -1737,7 +1702,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       // Clear backend cache when leaving the tool
       const jobId = cachedJobIdRef.current;
       if (jobId) {
-        console.log(`[PdfTextEditor] Cleaning up cached document on unmount: ${jobId}`);
         apiClient.post(`/api/v1/convert/pdf/text-editor/clear-cache/${jobId}`).catch((error) => {
           console.warn('[PdfTextEditor] Failed to clear cache on unmount:', error);
         });

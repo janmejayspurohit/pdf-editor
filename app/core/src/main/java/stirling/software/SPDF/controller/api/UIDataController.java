@@ -61,7 +61,6 @@ public class UIDataController {
     @Operation(summary = "Get public footer configuration data")
     public ResponseEntity<FooterData> getFooterData() {
         FooterData data = new FooterData();
-        data.setAnalyticsEnabled(applicationProperties.getSystem().getEnableAnalytics());
         data.setTermsAndConditions(applicationProperties.getLegal().getTermsAndConditions());
         data.setPrivacyPolicy(applicationProperties.getLegal().getPrivacyPolicy());
         data.setAccessibilityStatement(
@@ -195,7 +194,6 @@ public class UIDataController {
     // Data classes
     @Data
     public static class FooterData {
-        private Boolean analyticsEnabled;
         private String termsAndConditions;
         private String privacyPolicy;
         private String accessibilityStatement;

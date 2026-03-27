@@ -14,14 +14,18 @@
  * for both providers.
  */
 import { PDF_FORM_FIELD_TYPE } from '@app/services/pdfiumService';
-import { FPDF_ANNOT_WIDGET, FLAT_PRINT } from '@app/utils/pdfiumBitmapUtils';
+import { FPDF_ANNOT_WIDGET, FLAT_PRINT, decodeImageDataUrl, embedBitmapImageOnPage } from '@app/utils/pdfiumBitmapUtils';
 import type { FormField, FormFieldType, WidgetCoordinates, ButtonAction } from '@app/tools/formFill/types';
 import type { IFormDataProvider } from '@app/tools/formFill/providers/types';
+import type { WrappedPdfiumModule } from '@embedpdf/pdfium';
 import {
   closeDocAndFreeBuffer,
   extractFormFields,
   getPdfiumModule,
   openRawDocumentSafe,
+  parseRectToCss,
+  readAnnotRectAdjusted,
+  readEffectivePageBox,
   readUtf16,
   saveRawDocument,
   type PdfiumFormField,
@@ -448,6 +452,7 @@ export class PdfiumFormProvider implements IFormDataProvider {
     file: File | Blob,
     values: Record<string, string>,
     flatten: boolean,
+    signatureImages?: Record<string, string>,
   ): Promise<Blob> {
     const arrayBuffer = await file.arrayBuffer();
     const m = await getPdfiumModule();
@@ -590,10 +595,106 @@ export class PdfiumFormProvider implements IFormDataProvider {
       m.PDFiumExt_ExitFormFillEnvironment(formEnvPtr);
       m.PDFiumExt_CloseFormFillInfo(formInfoPtr);
 
+      // Embed signature images as page content (ink over the widget rectangle)
+      if (signatureImages && Object.keys(signatureImages).length > 0) {
+        await this.embedSignatureImagesOnPages(m, docPtr, signatureImages);
+      }
+
       const savedBytes = await saveRawDocument(docPtr);
       return new Blob([savedBytes], { type: 'application/pdf' });
     } finally {
       closeDocAndFreeBuffer(m, docPtr);
     }
   }
+
+  /**
+   * For each signature field with a drawn image, locate all widget annotations and
+   * embed the signature as a raster image object directly on the page at the widget
+   * coordinates. This is a visual ink-signature, not a cryptographic signature.
+   */
+  private async embedSignatureImagesOnPages(
+    m: WrappedPdfiumModule,
+    docPtr: number,
+    signatureImages: Record<string, string>,
+  ): Promise<void> {
+    const formInfoPtr = m.PDFiumExt_OpenFormFillInfo();
+    const formEnvPtr = m.PDFiumExt_InitFormFillEnvironment(docPtr, formInfoPtr);
+
+    try {
+      const pageCount = m.FPDF_GetPageCount(docPtr);
+      const rectBuf = m.pdfium.wasmExports.malloc(4 * 4);
+
+      for (let pageIdx = 0; pageIdx < pageCount; pageIdx++) {
+        const pagePtr = m.FPDF_LoadPage(docPtr, pageIdx);
+        if (!pagePtr) continue;
+        if (formEnvPtr) m.FORM_OnAfterLoadPage(pagePtr, formEnvPtr);
+
+        const pageBox = readEffectivePageBox(m, pagePtr);
+        const pageHeight = pageBox.top - pageBox.bottom;
+
+        const annotCount = m.FPDFPage_GetAnnotCount(pagePtr);
+        let pageModified = false;
+
+        for (let ai = 0; ai < annotCount; ai++) {
+          const annotPtr = m.FPDFPage_GetAnnot(pagePtr, ai);
+          if (!annotPtr) continue;
+
+          if (m.FPDFAnnot_GetSubtype(annotPtr) !== FPDF_ANNOT_WIDGET) {
+            m.FPDFPage_CloseAnnot(annotPtr);
+            continue;
+          }
+
+          // Read field name
+          const nl = formEnvPtr ? m.FPDFAnnot_GetFormFieldName(formEnvPtr, annotPtr, 0, 0) : 0;
+          let fieldName = '';
+          if (nl > 0 && formEnvPtr) {
+            const nb = m.pdfium.wasmExports.malloc(nl);
+            m.FPDFAnnot_GetFormFieldName(formEnvPtr, annotPtr, nb, nl);
+            fieldName = readUtf16(m, nb, nl);
+            m.pdfium.wasmExports.free(nb);
+          }
+
+          const dataUrl = signatureImages[fieldName];
+          if (!dataUrl) {
+            m.FPDFPage_CloseAnnot(annotPtr);
+            continue;
+          }
+
+          // Get widget rect in CSS space (top-left origin)
+          readAnnotRectAdjusted(m, annotPtr, rectBuf);
+          const css = parseRectToCss(m, rectBuf, pageHeight);
+
+          // Convert CSS top-left to PDF bottom-left origin
+          const pdfX = css.x;
+          const pdfY = pageHeight - css.y - css.height;
+
+          m.FPDFPage_CloseAnnot(annotPtr);
+
+          // Decode image and embed on page
+          try {
+            const imageResult = await decodeImageDataUrl(dataUrl);
+            if (imageResult) {
+              const ok = embedBitmapImageOnPage(m, docPtr, pagePtr, imageResult, pdfX, pdfY, css.width, css.height);
+              if (ok) pageModified = true;
+            }
+          } catch (imgErr) {
+            console.warn(`[PdfiumFormProvider] Failed to embed signature for "${fieldName}":`, imgErr);
+          }
+        }
+
+        if (pageModified) {
+          m.FPDFPage_GenerateContent(pagePtr);
+        }
+
+        if (formEnvPtr) m.FORM_OnBeforeClosePage(pagePtr, formEnvPtr);
+        m.FPDF_ClosePage(pagePtr);
+      }
+
+      m.pdfium.wasmExports.free(rectBuf);
+    } finally {
+      if (formEnvPtr) m.PDFiumExt_ExitFormFillEnvironment(formEnvPtr);
+      m.PDFiumExt_CloseFormFillInfo(formInfoPtr);
+    }
+  }
+
 }

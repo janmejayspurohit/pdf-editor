@@ -14,6 +14,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.PropertySource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.stereotype.Component;
@@ -423,9 +424,6 @@ public class ApplicationProperties {
         private boolean customHTMLFiles;
         private String tessdataDir;
         private boolean enableAlphaFunctionality;
-        private Boolean enableAnalytics;
-        private Boolean enablePosthog;
-        private Boolean enableScarf;
         private Boolean enableDesktopInstallSlide;
         private Datasource datasource;
         private boolean disableSanitize;
@@ -437,12 +435,8 @@ public class ApplicationProperties {
         private TempFileManagement tempFileManagement = new TempFileManagement();
         private DatabaseBackup databaseBackup = new DatabaseBackup();
         private List<String> corsAllowedOrigins = new ArrayList<>();
-        private String backendUrl; // Backend base URL for SAML/OAuth/API callbacks (e.g.
-        // 'http://localhost:8080', 'https://api.example.com'). Required for
-        // SSO.
-        private String frontendUrl; // Frontend URL for invite email links (e.g.
-
-        // 'https://app.example.com'). If not set, falls back to backendUrl.
+        private String backendUrl;
+        private String frontendUrl;
         private boolean enableMobileScanner = false; // Enable mobile phone QR code upload feature
         private MobileScannerSettings mobileScannerSettings = new MobileScannerSettings();
 
@@ -454,19 +448,6 @@ public class ApplicationProperties {
             private boolean stretchToFit = false; // Whether to stretch image to fill page
         }
 
-        public boolean isAnalyticsEnabled() {
-            return this.enableAnalytics != null && this.enableAnalytics;
-        }
-
-        public boolean isPosthogEnabled() {
-            // Treat null as enabled when analytics is enabled
-            return this.isAnalyticsEnabled() && (this.enablePosthog == null || this.enablePosthog);
-        }
-
-        public boolean isScarfEnabled() {
-            // Treat null as enabled when analytics is enabled
-            return this.isAnalyticsEnabled() && (this.enableScarf == null || this.enableScarf);
-        }
     }
 
     @Data

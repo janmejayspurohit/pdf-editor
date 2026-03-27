@@ -28,6 +28,16 @@ interface SignatureFieldOverlayProps {
   pageWidth: number;
   /** Rendered page height from Scroller (pixel space). */
   pageHeight: number;
+  /**
+   * When provided, unsigned signature fields become clickable and invoke
+   * this callback so the caller can open a signature capture dialog.
+   */
+  onUnsignedFieldClick?: (fieldName: string) => void;
+  /**
+   * User-drawn signature images keyed by field name.
+   * When present for a field, renders the drawn image instead of the fallback badge.
+   */
+  signatureImages?: Record<string, string>;
 }
 
 interface ResolvedSignatureField extends SignatureFieldAppearance {
@@ -114,6 +124,8 @@ function SignatureFieldOverlayInner({
   documentId: _documentId,
   pageWidth,
   pageHeight,
+  onUnsignedFieldClick,
+  signatureImages,
 }: SignatureFieldOverlayProps) {
   const [fields, setFields] = useState<ResolvedSignatureField[]>([]);
 
@@ -192,7 +204,38 @@ function SignatureFieldOverlayInner({
           );
         }
 
+        // Check if user has drawn a signature for this field
+        const userSignatureUrl = signatureImages?.[field.fieldName];
+        if (userSignatureUrl) {
+          return (
+            <div
+              key={`sig-${field.fieldName}-${idx}`}
+              style={{
+                position: 'absolute',
+                left,
+                top,
+                width,
+                height,
+                overflow: 'hidden',
+                pointerEvents: 'auto',
+                cursor: onUnsignedFieldClick ? 'pointer' : 'default',
+                border: '2px solid rgba(33, 150, 243, 0.7)',
+                borderRadius: 4,
+              }}
+              title={`Signature field: ${field.fieldName} (click to change)`}
+              onClick={() => onUnsignedFieldClick?.(field.fieldName)}
+            >
+              <img
+                src={userSignatureUrl}
+                style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+                alt="Signature"
+              />
+            </div>
+          );
+        }
+
         // Fallback: translucent badge for fields without an appearance.
+        const isClickable = !field.isSigned && !!onUnsignedFieldClick;
         return (
           <div
             key={`sig-${field.fieldName}-${idx}`}
@@ -204,28 +247,39 @@ function SignatureFieldOverlayInner({
               height,
               border: field.isSigned
                 ? '2px solid rgba(34, 139, 34, 0.7)'
-                : '2px dashed rgba(180, 180, 180, 0.7)',
+                : isClickable
+                  ? '2px dashed rgba(33, 150, 243, 0.7)'
+                  : '2px dashed rgba(180, 180, 180, 0.7)',
               borderRadius: 4,
               background: field.isSigned
                 ? 'rgba(34, 139, 34, 0.08)'
-                : 'rgba(200, 200, 200, 0.08)',
+                : isClickable
+                  ? 'rgba(33, 150, 243, 0.05)'
+                  : 'rgba(200, 200, 200, 0.08)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               overflow: 'hidden',
               pointerEvents: 'auto',
-              cursor: 'default',
+              cursor: isClickable ? 'pointer' : 'default',
             }}
             title={
               field.isSigned
                 ? `Signed${field.reason ? `: ${field.reason}` : ''}${field.time ? ` (${field.time})` : ''}`
-                : `Unsigned signature field: ${field.fieldName}`
+                : isClickable
+                  ? `Click to sign: ${field.fieldName}`
+                  : `Unsigned signature field: ${field.fieldName}`
             }
+            onClick={isClickable ? () => onUnsignedFieldClick(field.fieldName) : undefined}
           >
             <span
               style={{
                 fontSize: Math.min(height * 0.35, 14),
-                color: field.isSigned ? 'rgba(34, 139, 34, 0.85)' : 'rgba(120, 120, 120, 0.85)',
+                color: field.isSigned
+                  ? 'rgba(34, 139, 34, 0.85)'
+                  : isClickable
+                    ? 'rgba(33, 150, 243, 0.85)'
+                    : 'rgba(120, 120, 120, 0.85)',
                 fontWeight: 600,
                 textAlign: 'center',
                 lineHeight: 1.2,
@@ -237,7 +291,7 @@ function SignatureFieldOverlayInner({
                 maxWidth: '100%',
               }}
             >
-              {field.isSigned ? '🔒 Signed' : '✎ Signature'}
+              {field.isSigned ? 'Signed' : isClickable ? 'Click to Sign' : 'Signature'}
             </span>
           </div>
         );

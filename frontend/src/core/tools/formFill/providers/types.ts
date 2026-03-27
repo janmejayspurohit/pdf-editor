@@ -27,11 +27,13 @@ export interface IFormDataProvider {
    * @param file - The original PDF
    * @param values - Map of field name → value
    * @param flatten - Whether to flatten the form (make fields non-editable)
+   * @param signatureImages - Optional map of signature field name → data URL
    * @returns The filled PDF as a Blob
    */
   fillForm(
     file: File | Blob,
     values: Record<string, string>,
     flatten: boolean,
+    signatureImages?: Record<string, string>,
   ): Promise<Blob>;
 }

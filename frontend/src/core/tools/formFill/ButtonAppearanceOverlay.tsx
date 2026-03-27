@@ -1,13 +1,3 @@
-/**
- * ButtonAppearanceOverlay — Renders PDF push-button widget appearances as
- * canvas bitmaps on top of a PDF page.
- *
- * This is a visual-only layer (pointerEvents: none). Click handling is done
- * separately by FormFieldOverlay's transparent hit-target divs.
- *
- * Uses the same EPDF_RenderAnnotBitmap / FPDF_FFLDraw pipeline as
- * SignatureFieldOverlay to produce the button's native PDF appearance.
- */
 import React, { useEffect, useMemo, useRef, useState, memo } from 'react';
 import { renderButtonFieldAppearances, type SignatureFieldAppearance } from '@app/services/pdfiumService';
 
@@ -17,14 +7,14 @@ interface ButtonAppearanceOverlayProps {
   pageWidth: number;
   pageHeight: number;
 }
-let _cachedSource: File | Blob | null = null;
-let _cachePromise: Promise<SignatureFieldAppearance[]> | null = null;
+let cachedSource: File | Blob | null = null;
+let cachePromise: Promise<SignatureFieldAppearance[]> | null = null;
 
 async function resolveButtonAppearances(source: File | Blob): Promise<SignatureFieldAppearance[]> {
-  if (source === _cachedSource && _cachePromise) return _cachePromise;
-  _cachedSource = source;
-  _cachePromise = source.arrayBuffer().then((buf) => renderButtonFieldAppearances(buf));
-  return _cachePromise;
+  if (source === cachedSource && cachePromise) return cachePromise;
+  cachedSource = source;
+  cachePromise = source.arrayBuffer().then((buf) => renderButtonFieldAppearances(buf));
+  return cachePromise;
 }
 function ButtonBitmapCanvas({ imageData, cssWidth, cssHeight }: {
   imageData: ImageData;

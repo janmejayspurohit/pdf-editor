@@ -160,6 +160,8 @@ export interface TextGroup {
   lineSpacing?: number | null;
   lineElementCounts?: number[] | null;
   color?: string | null;
+  strokeColor?: string | null;
+  renderingMode?: number | null;
   fontWeight?: number | 'normal' | 'bold' | null;
   rotation?: number | null;
   anchor?: { x: number; y: number } | null;

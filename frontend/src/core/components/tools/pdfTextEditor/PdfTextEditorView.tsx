@@ -374,22 +374,6 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
   const pagePreview = pagePreviews.get(selectedPage);
   const { width: pageWidth, height: pageHeight } = pageDimensions(currentPage);
 
-  // Debug logging for page dimensions
-  console.log(`📐 [PdfTextEditor] Page ${selectedPage + 1} Dimensions:`, {
-    pageWidth,
-    pageHeight,
-    aspectRatio: pageHeight > 0 ? (pageWidth / pageHeight).toFixed(3) : 'N/A',
-    currentPage: currentPage ? {
-      mediaBox: currentPage.mediaBox,
-      cropBox: currentPage.cropBox,
-      rotation: currentPage.rotation,
-    } : null,
-    documentMetadata: pdfDocument?.metadata ? {
-      title: pdfDocument.metadata.title,
-      pageCount: pages.length,
-    } : null,
-  });
-
   const clearSelection = useCallback(() => {
     setSelectedGroupIds(new Set());
     lastSelectedGroupIdRef.current = null;
@@ -491,11 +475,10 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
   }, [pageGroups]);
 
   // Detect if current page contains paragraph-heavy content
-  const isParagraphPage = useMemo(() => {
-    const result = analyzePageContentType(pageGroups, pageWidth);
-    console.log(`🏷️ Page ${selectedPage} badge: ${result ? 'PARAGRAPH' : 'SPARSE'} (${pageGroups.length} groups)`);
-    return result;
-  }, [pageGroups, pageWidth, selectedPage]);
+  const isParagraphPage = useMemo(
+    () => analyzePageContentType(pageGroups, pageWidth),
+    [pageGroups, pageWidth],
+  );
   const isParagraphLayout =
     externalGroupingMode === 'paragraph' || (externalGroupingMode === 'auto' && isParagraphPage);
 
@@ -946,18 +929,10 @@ const orderedImages = useMemo(
     ),
   [pageImages],
 );
-const scale = useMemo(() => {
-  const calculatedScale = Math.min(MAX_RENDER_WIDTH / pageWidth, 2.5);
-  console.log(`🔍 [PdfTextEditor] Scale Calculation:`, {
-    MAX_RENDER_WIDTH,
-    pageWidth,
-    pageHeight,
-    calculatedScale: calculatedScale.toFixed(3),
-    scaledWidth: (pageWidth * calculatedScale).toFixed(2),
-    scaledHeight: (pageHeight * calculatedScale).toFixed(2),
-  });
-  return calculatedScale;
-}, [pageWidth, pageHeight]);
+const scale = useMemo(
+  () => Math.min(MAX_RENDER_WIDTH / pageWidth, 2.5),
+  [pageWidth, pageHeight],
+);
 const scaledWidth = pageWidth * scale;
 const scaledHeight = pageHeight * scale;
 const selectionToolbarPosition = useMemo(() => {
@@ -1051,7 +1026,6 @@ const selectionToolbarPosition = useMemo(() => {
         const originalTransform = textSpan.style.transform;
         textSpan.style.transform = 'none';
 
-        const _bounds = toCssBounds(currentPage, pageHeight, scale, group.bounds);
         const { width: resolvedWidth } = resolveGroupWidth(group);
         const containerWidth = resolvedWidth * scale;
         const textWidth = textSpan.getBoundingClientRect().width;
@@ -1134,8 +1108,6 @@ const selectionToolbarPosition = useMemo(() => {
       if (!rndRef || !rndRef.updatePosition) return;
 
       const bounds = getImageBounds(image);
-      const _width = Math.max(bounds.right - bounds.left, 1);
-      const _height = Math.max(bounds.top - bounds.bottom, 1);
       const cssLeft = bounds.left * scale;
       const cssTop = (pageHeight - bounds.top) * scale;
 
@@ -1325,30 +1297,22 @@ const selectionToolbarPosition = useMemo(() => {
             pointerEvents: 'auto',
           }}
           onMouseDown={(event) => {
-            console.log(`❌ MOUSEDOWN on X button for group ${groupId}`);
             event.stopPropagation();
             event.preventDefault();
 
-            // Find the current group to check if it's already empty
             const currentGroups = groupsByPage[pageIndex] ?? [];
             const currentGroup = currentGroups.find(g => g.id === groupId);
             const currentText = (currentGroup?.text ?? '').trim();
 
             if (currentText.length === 0) {
-              // Already empty - remove the textbox entirely
-              console.log(`   Text already empty, removing textbox`);
               onGroupDelete(pageIndex, groupId);
               setActiveGroupId(null);
               setEditingGroupId(null);
             } else {
-              // Has text - clear it but keep the textbox
-              console.log(`   Clearing text (textbox remains)`);
               onGroupEdit(pageIndex, groupId, '');
             }
-            console.log(`   Operation completed`);
           }}
           onClick={(event) => {
-            console.log(`❌ X button ONCLICK fired for group ${groupId} on page ${pageIndex}`);
             event.stopPropagation();
             event.preventDefault();
           }}
@@ -1548,15 +1512,6 @@ const selectionToolbarPosition = useMemo(() => {
                     }}
                     ref={(node) => {
                       containerRef.current = node;
-                      if (node) {
-                        console.log(`🖼️ [PdfTextEditor] Canvas Rendered:`, {
-                          renderedWidth: node.offsetWidth,
-                          renderedHeight: node.offsetHeight,
-                          styleWidth: scaledWidth,
-                          styleHeight: scaledHeight,
-                          pageNumber: selectedPage + 1,
-                        });
-                      }
                     }}
                   >
                     {pagePreview && (
@@ -1855,6 +1810,14 @@ const selectionToolbarPosition = useMemo(() => {
 
                       // Extract styling from group
                       const textColor = group.color || '#111827';
+                      const renderingMode = group.renderingMode ?? 0;
+                      const isStrokeOnly = renderingMode === 1;
+                      const isFillAndStroke = renderingMode === 2;
+                      const isInvisible = renderingMode === 3;
+                      const effectiveColor = isInvisible || isStrokeOnly ? 'transparent' : textColor;
+                      const strokeStyle: React.CSSProperties = (isStrokeOnly || isFillAndStroke) && group.strokeColor
+                        ? { WebkitTextStroke: `1px ${group.strokeColor}` }
+                        : {};
                       const fontWeight = group.fontWeight || getFontWeight(effectiveFontId, group.pageIndex);
 
                       // Determine text wrapping behavior based on whether text has been changed
@@ -1990,8 +1953,9 @@ const selectionToolbarPosition = useMemo(() => {
                                   minHeight: '100%',
                                   height: 'auto',
                                   padding: '2px',
-                                backgroundColor: 'rgba(255,255,255,0.95)',
-                                  color: textColor,
+                                  backgroundColor: 'rgba(255,255,255,0.95)',
+                                  color: effectiveColor,
+                                  ...strokeStyle,
                                   fontSize: `${fontSizePx}px`,
                                   fontFamily,
                                   fontWeight,
@@ -2006,7 +1970,7 @@ const selectionToolbarPosition = useMemo(() => {
                                   overflow: 'visible',
                                 }}
                               >
-                                {group.text || '\u00A0'}
+                                {group.text || ''}
                               </div>,
                               undefined,
                               undefined,
@@ -2040,7 +2004,8 @@ const selectionToolbarPosition = useMemo(() => {
                                 fontFamily,
                                 fontWeight,
                                 lineHeight: lineHeightRatio,
-                                color: textColor,
+                                color: effectiveColor,
+                                ...strokeStyle,
                                 display: 'block',
                                 cursor: 'text',
                                 overflow: enableWrap ? 'visible' : 'hidden',
@@ -2056,7 +2021,7 @@ const selectionToolbarPosition = useMemo(() => {
                                   whiteSpace,
                                 }}
                               >
-                                {group.text || '\u00A0'}
+                                {group.text || ''}
                               </span>
                             </div>,
                             undefined,
@@ -2074,22 +2039,6 @@ const selectionToolbarPosition = useMemo(() => {
                               setActiveGroupId(group.id);
                               setEditingGroupId(group.id);
                               caretOffsetsRef.current.delete(group.id);
-
-                              // Log group stats when selected
-                              const lines = (group.text ?? '').split('\n');
-                              const words = (group.text ?? '').split(/\s+/).filter(w => w.length > 0).length;
-                              const chars = (group.text ?? '').length;
-                              const width = group.bounds.right - group.bounds.left;
-                              const height = group.bounds.bottom - group.bounds.top;
-                              const isMultiLine = lines.length > 1;
-                              console.log(`📝 Selected Text Group "${group.id}":`);
-                              console.log(`   Lines: ${lines.length}, Words: ${words}, Chars: ${chars}`);
-                              console.log(`   Dimensions: ${width.toFixed(1)}pt × ${height.toFixed(1)}pt`);
-                              console.log(`   Type: ${isMultiLine ? 'MULTI-LINE (paragraph)' : 'SINGLE-LINE'}`);
-                              console.log(`   Text preview: "${(group.text ?? '').substring(0, 80)}${(group.text ?? '').length > 80 ? '...' : ''}"`);
-                              if (isMultiLine) {
-                                console.log(`   Line spacing: ${group.lineSpacing?.toFixed(1) ?? 'unknown'}pt`);
-                              }
 
                               requestAnimationFrame(() => {
                                 const editor = document.querySelector<HTMLElement>(`[data-editor-group="${group.id}"]`);

@@ -33,6 +33,12 @@ const FileListArea: React.FC<FileListAreaProps> = ({
   } = useFileManagerContext();
   const { t } = useTranslation();
 
+  if (activeSource === 'local') {
+    return (
+      <EmptyFilesState />
+    );
+  }
+
   if (activeSource === 'recent') {
     return (
       <ScrollArea

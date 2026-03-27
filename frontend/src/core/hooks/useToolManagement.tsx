@@ -126,6 +126,8 @@ export const useToolManagement = (): ToolManagementResult => {
     (Object.keys(baseRegistry) as ToolId[]).forEach(toolKey => {
       const baseTool = baseRegistry[toolKey];
       if (!baseTool) return;
+      // 'automate' is accessed via the quick-access bar only — exclude from the sidebar tool list
+      if (toolKey === 'automate') return;
       const availabilityInfo = toolAvailability[toolKey];
       const isAvailable = availabilityInfo ? availabilityInfo.available !== false : true;
 

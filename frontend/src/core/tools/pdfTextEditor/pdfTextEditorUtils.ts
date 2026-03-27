@@ -374,30 +374,29 @@ const grayToCss = (components: number[]): string => {
   return 'rgb(0, 0, 0)';
 };
 
-const extractColor = (element: PdfJsonTextElement): string | null => {
-  const fillColor = element.fillColor;
-  if (!fillColor || !fillColor.components || fillColor.components.length === 0) {
+const extractColorValue = (color: PdfJsonTextColor | null | undefined): string | null => {
+  if (!color || !color.components || color.components.length === 0) {
     return null;
   }
 
-  const colorSpace = (fillColor.colorSpace ?? '').toLowerCase();
+  const colorSpace = (color.colorSpace ?? '').toLowerCase();
 
   if (colorSpace.includes('rgb') || colorSpace.includes('srgb')) {
-    return rgbToCss(fillColor.components);
+    return rgbToCss(color.components);
   }
   if (colorSpace.includes('cmyk')) {
-    return cmykToCss(fillColor.components);
+    return cmykToCss(color.components);
   }
   if (colorSpace.includes('gray') || colorSpace.includes('grey')) {
-    return grayToCss(fillColor.components);
+    return grayToCss(color.components);
   }
 
   // Default to RGB interpretation
-  if (fillColor.components.length >= 3) {
-    return rgbToCss(fillColor.components);
+  if (color.components.length >= 3) {
+    return rgbToCss(color.components);
   }
-  if (fillColor.components.length === 1) {
-    return grayToCss(fillColor.components);
+  if (color.components.length === 1) {
+    return grayToCss(color.components);
   }
 
   return null;
@@ -506,7 +505,9 @@ const createGroup = (
     fontId: firstElement?.fontId,
     fontSize: firstElement?.fontSize,
     fontMatrixSize: firstElement?.fontMatrixSize,
-    color: firstElement ? extractColor(firstElement) : null,
+    color: firstElement ? extractColorValue(firstElement.fillColor) : null,
+    strokeColor: firstElement ? extractColorValue(firstElement.strokeColor) : null,
+    renderingMode: firstElement?.renderingMode ?? null,
     fontWeight: null, // Will be determined from font descriptor
     rotation,
     anchor,
@@ -645,14 +646,6 @@ const groupLinesIntoParagraphs = (
       !bothAreBullets &&
       !currentIsBullet;
 
-    if (i < 10 || likelyBulletStart || bothAreBullets || !shouldMerge) {
-      console.log(`  Line ${i}:`);
-      console.log(`    prev: "${prevText.substring(0, 40)}" (${prevWords}w, ${prevWidth.toFixed(0)}pt, marker:${prevHasBulletMarker}, bullet:${prevIsBullet})`);
-      console.log(`    curr: "${currentText.substring(0, 40)}" (${currentWords}w, ${currentWidth.toFixed(0)}pt, marker:${currentHasBulletMarker}, bullet:${currentIsBullet})`);
-      console.log(`    checks: leftAlign:${isLeftAligned} (${Math.abs(prevLeft - currentLeft).toFixed(1)}pt), sameFont:${sameFont}, spacing:${hasReasonableSpacing} (${lineSpacing.toFixed(1)}pt/${maxReasonableSpacing.toFixed(1)}pt)`);
-      console.log(`    decision: merge=${shouldMerge} (bulletStart:${likelyBulletStart}, bothBullets:${bothAreBullets})`);
-    }
-
     if (shouldMerge) {
       currentParagraph.push(currentLine);
     } else {
@@ -715,7 +708,9 @@ const groupLinesIntoParagraphs = (
       fontMatrixSize: firstElement?.fontMatrixSize,
       lineSpacing: averageSpacing,
       lineElementCounts: lines.length > 1 ? lineElementCounts : null,
-      color: firstElement ? extractColor(firstElement) : null,
+      color: firstElement ? extractColorValue(firstElement.fillColor) : null,
+      strokeColor: firstElement ? extractColorValue(firstElement.strokeColor) : null,
+      renderingMode: firstElement?.renderingMode ?? null,
       fontWeight: null,
       rotation,
       anchor,
@@ -794,7 +789,6 @@ export const groupPageTextElements = (
         const currentBaseline = getBaseline(element);
         const baselineDelta = Math.abs(prevBaseline - currentBaseline);
         const prevEndX = getX(previous) + getWidth(previous, metrics);
-        const _prevEndY = prevBaseline;
         const diagonalGap = Math.hypot(Math.max(0, getX(element) - prevEndX), baselineDelta);
         const diagonalThreshold = Math.max(avgFontSize * 0.8, splitThreshold);
         if (diagonalGap <= diagonalThreshold) {
@@ -901,48 +895,10 @@ export const groupPageTextElements = (
 
   const isParagraphPage = criterion1 && criterion2 && criterion3;
 
-  // Log detection stats
-  console.log(`📄 Page ${pageIndex} Grouping Analysis (mode: ${groupingMode}):`);
-  console.log(`   Stats:`);
-  console.log(`     • Page width: ${pageWidth.toFixed(1)}pt (full-width threshold: ${fullWidthThreshold.toFixed(1)}pt)`);
-  console.log(`     • Multi-line groups: ${multiLineGroups}`);
-  console.log(`     • Total groups: ${totalGroups}`);
-  console.log(`     • Total words: ${totalWords}`);
-  console.log(`     • Long text groups (≥10 words or ≥50 chars): ${longTextGroups}`);
-  console.log(`     • Full-width lines (≥70% page width): ${fullWidthLines}`);
-  console.log(`     • Avg words per group: ${avgWordsPerGroup.toFixed(2)}`);
-  console.log(`     • Long text ratio: ${(longTextRatio * 100).toFixed(1)}%`);
-  console.log(`     • Full-width ratio: ${(fullWidthRatio * 100).toFixed(1)}%`);
-  console.log(`     • Std deviation: ${stdDev.toFixed(2)}`);
-  console.log(`     • Coefficient of variation: ${coefficientOfVariation.toFixed(2)}`);
-  console.log(`   Criteria:`);
-  console.log(`     1. Avg Words Per Group: ${criterion1 ? '✅ PASS' : '❌ FAIL'}`);
-  console.log(`        (${avgWordsPerGroup.toFixed(2)} > 5)`);
-  console.log(`     2. Long Text Ratio: ${criterion2 ? '✅ PASS' : '❌ FAIL'}`);
-  console.log(`        (${(longTextRatio * 100).toFixed(1)}% > 40%)`);
-  console.log(`     3. Line Width Pattern: ${criterion3 ? '✅ PASS' : '❌ FAIL'}`);
-  console.log(`        (CV ${coefficientOfVariation.toFixed(2)} > 0.5 OR ${(fullWidthRatio * 100).toFixed(1)}% > 60%)`);
-  console.log(`        ${coefficientOfVariation > 0.5 ? '✓ High variance (varying line lengths)' : '✗ Low variance'} ${fullWidthRatio > 0.6 ? '✓ Many full-width lines (paragraph-like)' : '✗ Few full-width lines (list-like)'}`);
-  console.log(`   Decision: ${isParagraphPage ? '📝 PARAGRAPH MODE' : '📋 LINE MODE'}`);
   if (isParagraphPage) {
-    console.log(`   Reason: All three criteria passed (AND logic)`);
-  } else {
-    const failedReasons = [];
-    if (!criterion1) failedReasons.push('low average words per group');
-    if (!criterion2) failedReasons.push('low ratio of long text groups');
-    if (!criterion3) failedReasons.push('low variance and few full-width lines (list-like structure)');
-    console.log(`   Reason: ${failedReasons.join(', ')}`);
-  }
-  console.log('');
-
-  // Only apply paragraph grouping if it looks like a paragraph-heavy page
-  if (isParagraphPage) {
-    console.log(`🔀 Applying paragraph grouping to page ${pageIndex}`);
     return groupLinesIntoParagraphs(lineGroups, pageWidth, metrics);
   }
 
-  // For sparse pages, keep lines separate
-  console.log(`📋 Keeping lines separate for page ${pageIndex}`);
   return lineGroups;
 };
 
@@ -987,23 +943,6 @@ export const pageDimensions = (page: PdfJsonPage | null | undefined): { width: n
   const width = valueOr(page?.width, DEFAULT_PAGE_WIDTH);
   const height = valueOr(page?.height, DEFAULT_PAGE_HEIGHT);
 
-  console.log(`📏 [pageDimensions] Calculating page size:`, {
-    hasPage: !!page,
-    rawWidth: page?.width,
-    rawHeight: page?.height,
-    mediaBox: page?.mediaBox,
-    cropBox: page?.cropBox,
-    rotation: page?.rotation,
-    calculatedWidth: width,
-    calculatedHeight: height,
-    DEFAULT_PAGE_WIDTH,
-    DEFAULT_PAGE_HEIGHT,
-    commonFormats: {
-      'US Letter': '612 × 792 pt',
-      'A4': '595 × 842 pt',
-      'Legal': '612 × 1008 pt',
-    },
-  });
 
   return { width, height };
 };
@@ -1229,7 +1168,6 @@ export const restoreGlyphElements = (
   updated.pages = pages.map((page, pageIndex) => {
     const groups = groupsByPage[pageIndex] ?? [];
     const images = imagesByPage[pageIndex] ?? [];
-    const _baselineImages = originalImagesByPage[pageIndex] ?? [];
 
     if (!groups.length) {
       return {
@@ -1382,17 +1320,6 @@ export const getDirtyPages = (
     );
 
     const isDirty = textDirty || groupCountChanged || imageDirty;
-
-    if (groupCountChanged || textDirty) {
-      console.log(`📄 Page ${index} dirty check:`, {
-        textDirty,
-        groupCountChanged,
-        originalGroupsLength: originalGroups.length,
-        currentGroupsLength: groups.length,
-        imageDirty,
-        isDirty,
-      });
-    }
 
     return isDirty;
   });

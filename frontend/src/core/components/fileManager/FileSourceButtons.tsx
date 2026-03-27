@@ -70,22 +70,13 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
       </Button>
 
       <Button
-        variant="subtle"
-        color='var(--mantine-color-gray-6)'
         leftSection={<UploadIcon />}
         justify={horizontal ? "center" : "flex-start"}
-        onClick={onLocalFileClick}
+        onClick={() => { onSourceChange('local'); onLocalFileClick(); }}
         fullWidth={!horizontal}
         size={horizontal ? "xs" : "sm"}
-        styles={{
-          root: {
-            backgroundColor: 'transparent',
-            border: 'none',
-            '&:hover': {
-              backgroundColor: 'var(--mantine-color-gray-0)'
-            }
-          }
-        }}
+        color={buttonProps.getColor('local')}
+        styles={buttonProps.getStyles('local')}
       >
         {horizontal ? terminology.upload : terminology.uploadFiles}
       </Button>

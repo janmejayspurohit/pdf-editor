@@ -2361,4 +2361,109 @@ public class FormUtils {
             return Float.compare(yA, yB);
         }
     }
+
+    /**
+     * Embed signature images as visual appearance streams (AP/N) on the matching
+     * signature field widgets.
+     *
+     * <p>Each entry in {@code signatureImages} maps a fully-qualified field name to a
+     * PNG image encoded as a Base64 data URL ({@code data:image/png;base64,...}).
+     * The image is written as an XObject into the widget's Normal Appearance entry so
+     * that it is rendered by Adobe Acrobat and other PDF viewers.
+     *
+     * @param document        The open PDDocument (will be modified in-place).
+     * @param signatureImages Map of field name → Base64 PNG data URL.
+     */
+    public void applySignatureImages(PDDocument document, Map<String, String> signatureImages)
+            throws IOException {
+        if (document == null || signatureImages == null || signatureImages.isEmpty()) {
+            return;
+        }
+
+        PDAcroForm acroForm = getAcroFormSafely(document);
+        if (acroForm == null) {
+            log.debug("No AcroForm — cannot apply signature images");
+            return;
+        }
+
+        for (Map.Entry<String, String> entry : signatureImages.entrySet()) {
+            String fieldName = entry.getKey();
+            String dataUrl = entry.getValue();
+            if (fieldName == null || fieldName.isBlank() || dataUrl == null || dataUrl.isBlank()) {
+                continue;
+            }
+
+            PDField field = acroForm.getField(fieldName);
+            if (field == null) {
+                log.debug("Signature field '{}' not found in AcroForm, skipping", fieldName);
+                continue;
+            }
+
+            // Decode the Base64 PNG
+            byte[] pngBytes = decodePngDataUrl(dataUrl);
+            if (pngBytes == null) {
+                log.warn("Could not decode signature image for field '{}'", fieldName);
+                continue;
+            }
+
+            // Apply the appearance to each widget of this field
+            for (PDAnnotationWidget widget : field.getWidgets()) {
+                try {
+                    writeSignatureAppearance(document, widget, pngBytes);
+                } catch (Exception e) {
+                    log.warn(
+                            "Failed to write signature appearance for field '{}': {}",
+                            fieldName,
+                            e.getMessage());
+                }
+            }
+        }
+    }
+
+    private byte[] decodePngDataUrl(String dataUrl) {
+        try {
+            // Strip the data URL prefix, e.g. "data:image/png;base64,"
+            int commaIdx = dataUrl.indexOf(',');
+            if (commaIdx < 0) return null;
+            String base64 = dataUrl.substring(commaIdx + 1).trim();
+            return java.util.Base64.getDecoder().decode(base64);
+        } catch (Exception e) {
+            log.warn("Failed to decode Base64 image data: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private void writeSignatureAppearance(
+            PDDocument document, PDAnnotationWidget widget, byte[] pngBytes) throws IOException {
+        PDRectangle rect = widget.getRectangle();
+        if (rect == null) return;
+
+        float w = rect.getWidth();
+        float h = rect.getHeight();
+        if (w <= 0 || h <= 0) return;
+
+        // Embed the PNG into the document
+        PDImageXObject image =
+                org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory.createFromImage(
+                        document,
+                        javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(pngBytes)));
+
+        // Build a Form XObject (AP stream) that draws the image over the widget bbox
+        PDAppearanceStream apStream = new PDAppearanceStream(document);
+        apStream.setResources(new PDResources());
+        apStream.setBBox(new PDRectangle(w, h));
+
+        try (PDPageContentStream cs =
+                new PDPageContentStream(document, apStream)) {
+            cs.drawImage(image, 0, 0, w, h);
+        }
+
+        // Attach the appearance stream as the Normal (N) entry of the widget's AP dict
+        PDAppearanceDictionary apDict = widget.getAppearance();
+        if (apDict == null) {
+            apDict = new PDAppearanceDictionary();
+            widget.setAppearance(apDict);
+        }
+        apDict.setNormalAppearance(apStream);
+    }
 }

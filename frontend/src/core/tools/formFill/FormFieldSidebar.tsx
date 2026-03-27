@@ -1,12 +1,3 @@
-/**
- * FormFieldSidebar — A right-side panel for viewing and filling form fields
- * when the dedicated formFill tool is NOT selected (normal viewer mode).
- *
- * Redesigned with:
- * - Consistent CSS module styling matching the main FormFill panel
- * - Shared FieldInput component (no duplication)
- * - Better visual hierarchy and spacing
- */
 import React, { useCallback, useEffect, useRef } from 'react';
 import {
   Box,
@@ -16,7 +7,6 @@ import {
   Tooltip,
   ActionIcon,
 } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
 import { useFormFill } from '@app/tools/formFill/FormFillContext';
 import { FieldInput } from '@app/tools/formFill/FieldInput';
 import { FIELD_TYPE_ICON, FIELD_TYPE_COLOR } from '@app/tools/formFill/fieldMeta';
@@ -34,7 +24,6 @@ export function FormFieldSidebar({
   visible,
   onToggle,
 }: FormFieldSidebarProps) {
-  useTranslation();
   const { state, setValue, setActiveField } = useFormFill();
   const { fields, activeFieldName, loading } = state;
   const activeFieldRef = useRef<HTMLDivElement>(null);

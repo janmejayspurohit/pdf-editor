@@ -61,6 +61,8 @@ import { absoluteWithBasePath } from '@app/constants/app';
 import { FormFieldOverlay } from '@app/tools/formFill/FormFieldOverlay';
 import { ButtonAppearanceOverlay } from '@app/tools/formFill/ButtonAppearanceOverlay';
 import SignatureFieldOverlay from '@app/components/viewer/SignatureFieldOverlay';
+import { SignatureFieldModal } from '@app/tools/formFill/SignatureFieldModal';
+import { useFormFill } from '@app/tools/formFill/FormFillContext';
 import { CommentsSidebar } from '@app/components/viewer/CommentsSidebar';
 import { CommentAuthorProvider } from '@app/contexts/CommentAuthorContext';
 import { accountService } from '@app/services/accountService';
@@ -95,6 +97,10 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: Rect}>>([]);
   const [commentAuthorName, setCommentAuthorName] = useState<string>('Guest');
+
+  // Signature field modal state (for form-fill mode)
+  const [activeSignatureField, setActiveSignatureField] = useState<string | null>(null);
+  const { state: formState, setSignatureImage, signatureImages } = useFormFill();
 
   useEffect(() => {
     accountService.getAccountData().then((data) => {
@@ -288,6 +294,7 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
 
   // Wrap your UI with the <EmbedPDF> provider
   return (
+    <>
     <div
         style={{
           height: '100%',
@@ -831,6 +838,8 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
                               pdfSource={file}
                               pageWidth={width}
                               pageHeight={height}
+                              onUnsignedFieldClick={enableFormFill ? setActiveSignatureField : undefined}
+                              signatureImages={enableFormFill ? signatureImages : undefined}
                             />
                           )}
 
@@ -881,5 +890,22 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
         </ActiveDocumentProvider>
       </EmbedPDF>
       </div>
+
+      {enableFormFill && activeSignatureField && (
+        <SignatureFieldModal
+          fieldName={activeSignatureField}
+          fieldLabel={
+            formState.fields.find((f) => f.name === activeSignatureField)?.label
+              ?? activeSignatureField
+          }
+          opened={!!activeSignatureField}
+          onClose={() => setActiveSignatureField(null)}
+          onConfirm={(name, dataUrl) => {
+            setSignatureImage(name, dataUrl);
+            setActiveSignatureField(null);
+          }}
+        />
+      )}
+    </>
   );
 }

@@ -234,10 +234,6 @@ public class ConfigController {
                     "enableAlphaFunctionality",
                     applicationProperties.getSystem().isEnableAlphaFunctionality());
             configData.put(
-                    "enableAnalytics", applicationProperties.getSystem().getEnableAnalytics());
-            configData.put("enablePosthog", applicationProperties.getSystem().getEnablePosthog());
-            configData.put("enableScarf", applicationProperties.getSystem().getEnableScarf());
-            configData.put(
                     "enableDesktopInstallSlide",
                     applicationProperties.getSystem().getEnableDesktopInstallSlide());
 

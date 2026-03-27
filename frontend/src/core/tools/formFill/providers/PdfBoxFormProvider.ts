@@ -26,7 +26,8 @@ export class PdfBoxFormProvider implements IFormDataProvider {
     file: File | Blob,
     values: Record<string, string>,
     flatten: boolean,
+    signatureImages?: Record<string, string>,
   ): Promise<Blob> {
-    return fillFormFields(file, values, flatten);
+    return fillFormFields(file, values, flatten, signatureImages);
   }
 }

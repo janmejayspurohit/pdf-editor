@@ -24,7 +24,6 @@ import { PdfTextEditorViewData, TextGroup } from '@app/tools/pdfTextEditor/pdfTe
 import { pageDimensions } from '@app/tools/pdfTextEditor/pdfTextEditorUtils';
 import FontStatusPanel from '@app/components/tools/pdfTextEditor/FontStatusPanel';
 import ToolStep from '@app/components/tools/shared/ToolStep';
-import { usePdfTextEditorTips } from '@app/components/tooltips/usePdfTextEditorTips';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import LocalIcon from '@app/components/shared/LocalIcon';
 
@@ -63,8 +62,6 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
   const [pendingModeChange, setPendingModeChange] = useState<GroupingMode | null>(null);
   const [advancedSettingsCollapsed, setAdvancedSettingsCollapsed] = useState(false);
   const [fontsCollapsed, setFontsCollapsed] = useState(false);
-  const pdfTextEditorTips = usePdfTextEditorTips();
-
   const {
     document: pdfDocument,
     groupsByPage,
@@ -122,27 +119,9 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
         <ScrollArea style={{ flex: 1 }} offsetScrollbars>
           <Stack gap="md">
             <Stack gap="xs" pl="md" pr={0} pt="md">
-              {/* Title row with ALPHA badge and info tooltip */}
-              <Flex align="center" justify="space-between">
-                <Flex align="center" gap="xs">
-                  <Text fw={600} size="sm">
-                    {t('pdfTextEditor.title', 'PDF Text Editor')}
-                  </Text>
-                  <Badge size="xs" variant="light" color="orange">
-                    {t('toolPanel.alpha', 'Alpha')}
-                  </Badge>
-                </Flex>
-                <Tooltip
-                  sidebarTooltip={true}
-                  tips={pdfTextEditorTips.tips}
-                  header={pdfTextEditorTips.header}
-                  pinOnClick
-                >
-                  <ActionIcon variant="subtle" color="blue" size="sm">
-                    <LocalIcon icon="info-outline-rounded" width="1.25rem" height="1.25rem" />
-                  </ActionIcon>
-                </Tooltip>
-              </Flex>
+              <Text fw={600} size="sm">
+                {t('pdfTextEditor.title', 'PDF Text Editor')}
+              </Text>
 
               {fileName && (
                 <Text size="sm" c="dimmed">

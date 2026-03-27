@@ -15,7 +15,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Profile;
-import org.springframework.context.annotation.Scope;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -45,12 +44,6 @@ public class AppConfig {
     @Value("${server.port:8080}")
     private String serverPort;
 
-    /**
-     * Get the backend URL from system configuration. Falls back to http://localhost if not
-     * configured.
-     *
-     * @return The backend base URL for SAML/OAuth/API callbacks
-     */
     public String getBackendUrl() {
         String backendUrl = applicationProperties.getSystem().getBackendUrl();
         return (backendUrl != null && !backendUrl.isBlank()) ? backendUrl : "http://localhost";
@@ -187,19 +180,6 @@ public class AppConfig {
         return applicationProperties.getLegal().getAccessibilityStatement();
     }
 
-    @Bean(name = "analyticsPrompt")
-    @Scope("request")
-    public boolean analyticsPrompt() {
-        return applicationProperties.getSystem().getEnableAnalytics() == null;
-    }
-
-    @Bean(name = "analyticsEnabled")
-    @Scope("request")
-    public boolean analyticsEnabled() {
-        if (applicationProperties.getPremium().isEnabled()) return true;
-        return applicationProperties.getSystem().isAnalyticsEnabled();
-    }
-
     @Bean(name = "StirlingPDFLabel")
     public String stirlingPDFLabel() {
         return "Stirling-PDF" + " v" + appVersion();
@@ -213,11 +193,6 @@ public class AppConfig {
     @Bean
     public ApplicationProperties.Security security() {
         return applicationProperties.getSecurity();
-    }
-
-    @Bean
-    public ApplicationProperties.Security.OAUTH2 oAuth2() {
-        return applicationProperties.getSecurity().getOauth2();
     }
 
     @Bean
@@ -251,16 +226,6 @@ public class AppConfig {
     @Profile("default")
     public String licenseType() {
         return "NORMAL";
-    }
-
-    @Bean(name = "scarfEnabled")
-    public boolean scarfEnabled() {
-        return applicationProperties.getSystem().isScarfEnabled();
-    }
-
-    @Bean(name = "posthogEnabled")
-    public boolean posthogEnabled() {
-        return applicationProperties.getSystem().isPosthogEnabled();
     }
 
     @Bean(name = "machineType")
