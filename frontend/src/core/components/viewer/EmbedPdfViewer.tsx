@@ -24,6 +24,7 @@ import type { PDFDict, PDFNumber } from '@cantoo/pdf-lib';
 import { useWheelZoom } from '@app/hooks/useWheelZoom';
 import { useFormFill } from '@app/tools/formFill/FormFillContext';
 import { FormSaveBar } from '@app/tools/formFill/FormSaveBar';
+import { FormFieldSidebar } from '@app/tools/formFill/FormFieldSidebar';
 
 // ─── Measure dictionary extraction ────────────────────────────────────────────
 
@@ -197,7 +198,9 @@ const EmbedPdfViewerContent = ({
   const { selectedTool } = useNavigationState();
 
   // Form fill context
-  const { fetchFields: fetchFormFields, setProviderMode } = useFormFill();
+  const { fetchFields: fetchFormFields, setProviderMode, state: formState } = useFormFill();
+  const [formSidebarVisible, setFormSidebarVisible] = useState(true);
+  const hasFormFields = formState.fields.some(f => f.type !== 'button' && f.type !== 'signature');
 
   const isInAnnotationTool = selectedTool === 'sign' || selectedTool === 'addText' || selectedTool === 'addImage' || selectedTool === 'annotate';
   const isSignatureMode = isInAnnotationTool;
@@ -999,6 +1002,13 @@ const EmbedPdfViewerContent = ({
               isFormFillToolActive={isFormFillToolActive}
               onApply={handleFormApply}
             />
+            {/* Right-side form fields sidebar (visible in normal viewer mode) */}
+            {!isFormFillToolActive && hasFormFields && (
+              <FormFieldSidebar
+                visible={formSidebarVisible}
+                onToggle={() => setFormSidebarVisible((v) => !v)}
+              />
+            )}
             <StampPlacementOverlay
               containerRef={pdfContainerRef}
               isActive={isPlacementOverlayActive}
