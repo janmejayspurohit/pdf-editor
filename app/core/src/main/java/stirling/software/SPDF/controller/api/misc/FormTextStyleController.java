@@ -46,11 +46,10 @@ import stirling.software.common.util.WebResponseUtils;
 public class FormTextStyleController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-    private final ObjectMapper objectMapper;
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    public FormTextStyleController(CustomPDFDocumentFactory pdfDocumentFactory, ObjectMapper objectMapper) {
+    public FormTextStyleController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
-        this.objectMapper = objectMapper;
     }
 
     @PostMapping(value = "/apply-form-text-style", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -143,7 +142,7 @@ public class FormTextStyleController {
             throws IOException {
 
         Map<String, FieldStyleEntry> fieldStyles =
-                objectMapper.readValue(fieldStylesJson, new TypeReference<Map<String, FieldStyleEntry>>() {});
+                OBJECT_MAPPER.readValue(fieldStylesJson, new TypeReference<Map<String, FieldStyleEntry>>() {});
 
         try (PDDocument document = pdfDocumentFactory.load(fileInput, true)) {
             PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
