@@ -47,16 +47,6 @@ const FONT_OPTIONS = [
   { value: 'Courier', label: 'Courier (Monospace)' },
 ];
 
-const DEFAULT_TEXT_STYLE: TextStyleOptions = {
-  fontFamily: 'Helvetica',
-  fontSize: 12,
-  textColor: '#000000',
-  bold: false,
-  italic: false,
-  textAlign: 'left',
-  textTransform: 'none',
-};
-
 // ---------------------------------------------------------------------------
 // Main FormFill component
 // ---------------------------------------------------------------------------
@@ -72,6 +62,10 @@ const FormFill = (_props: BaseToolProps) => {
     setValue,
     setActiveField,
     validateForm,
+    textStyle,
+    setTextStyle,
+    applyTextStyle,
+    setApplyTextStyle,
   } = useFormFill();
 
   const allValues = useAllFormValues();
@@ -84,8 +78,6 @@ const FormFill = (_props: BaseToolProps) => {
   const [extracting, setExtracting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [textStyleOpen, setTextStyleOpen] = useState(false);
-  const [applyTextStyle, setApplyTextStyle] = useState(false);
-  const [textStyle, setTextStyle] = useState<TextStyleOptions>(DEFAULT_TEXT_STYLE);
 
   const [lastSavedFlatten, setLastSavedFlatten] = useState<boolean | null>(null);
   const flattenChanged = lastSavedFlatten !== null && flatten !== lastSavedFlatten;
@@ -216,7 +208,7 @@ const FormFill = (_props: BaseToolProps) => {
       savingRef.current = false;
       setSaving(false);
     }
-  }, [currentFile, submitForm, flatten, validateForm]);
+  }, [currentFile, submitForm, flatten, validateForm, applyTextStyle, textStyle]);
 
   // Keyboard shortcut: Ctrl+S to save
   const flattenChangedRef = useRef(flattenChanged);
@@ -416,7 +408,7 @@ const FormFill = (_props: BaseToolProps) => {
                   size="xs"
                   data={FONT_OPTIONS}
                   value={textStyle.fontFamily}
-                  onChange={(v) => setTextStyle((s) => ({ ...s, fontFamily: v ?? 'Helvetica' }))}
+                  onChange={(v) => setTextStyle({ ...textStyle, fontFamily: v ?? 'Helvetica' })}
                   allowDeselect={false}
                 />
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
@@ -426,7 +418,7 @@ const FormFill = (_props: BaseToolProps) => {
                     min={4}
                     max={72}
                     value={textStyle.fontSize}
-                    onChange={(v) => setTextStyle((s) => ({ ...s, fontSize: Number(v) || 12 }))}
+                    onChange={(v) => setTextStyle({ ...textStyle, fontSize: Number(v) || 12 })}
                     style={{ flex: 1 }}
                   />
                   <div style={{ display: 'flex', gap: '0.25rem', paddingBottom: '0.15rem' }}>
@@ -435,7 +427,7 @@ const FormFill = (_props: BaseToolProps) => {
                         size="sm"
                         variant={textStyle.bold ? 'filled' : 'light'}
                         color={textStyle.bold ? 'blue' : 'gray'}
-                        onClick={() => setTextStyle((s) => ({ ...s, bold: !s.bold }))}
+                        onClick={() => setTextStyle({ ...textStyle, bold: !textStyle.bold })}
                         aria-label="Bold"
                       >
                         <FormatBoldIcon sx={{ fontSize: 14 }} />
@@ -446,7 +438,7 @@ const FormFill = (_props: BaseToolProps) => {
                         size="sm"
                         variant={textStyle.italic ? 'filled' : 'light'}
                         color={textStyle.italic ? 'blue' : 'gray'}
-                        onClick={() => setTextStyle((s) => ({ ...s, italic: !s.italic }))}
+                        onClick={() => setTextStyle({ ...textStyle, italic: !textStyle.italic })}
                         aria-label="Italic"
                       >
                         <FormatItalicIcon sx={{ fontSize: 14 }} />
@@ -458,7 +450,7 @@ const FormFill = (_props: BaseToolProps) => {
                   label="Color"
                   size="xs"
                   value={textStyle.textColor}
-                  onChange={(v) => setTextStyle((s) => ({ ...s, textColor: v }))}
+                  onChange={(v) => setTextStyle({ ...textStyle, textColor: v })}
                   format="hex"
                   swatches={['#000000', '#1e3a5f', '#c0392b', '#27ae60', '#8e44ad', '#e67e22']}
                 />
@@ -469,10 +461,7 @@ const FormFill = (_props: BaseToolProps) => {
                     fullWidth
                     value={textStyle.textAlign}
                     onChange={(v) =>
-                      setTextStyle((s) => ({
-                        ...s,
-                        textAlign: v as TextStyleOptions['textAlign'],
-                      }))
+                      setTextStyle({ ...textStyle, textAlign: v as TextStyleOptions['textAlign'] })
                     }
                     data={[
                       { label: 'Left', value: 'left' },
@@ -488,10 +477,7 @@ const FormFill = (_props: BaseToolProps) => {
                     fullWidth
                     value={textStyle.textTransform}
                     onChange={(v) =>
-                      setTextStyle((s) => ({
-                        ...s,
-                        textTransform: v as TextStyleOptions['textTransform'],
-                      }))
+                      setTextStyle({ ...textStyle, textTransform: v as TextStyleOptions['textTransform'] })
                     }
                     data={[
                       { label: 'None', value: 'none' },

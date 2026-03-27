@@ -16,6 +16,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import SaveIcon from '@mui/icons-material/Save';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import { useFormFill } from '@app/tools/formFill/FormFillContext';
+import { applyFormTextStyle } from '@app/tools/formFill/formApi';
 
 interface FormSaveBarProps {
   /** The current file being viewed */
@@ -28,7 +29,7 @@ interface FormSaveBarProps {
 
 export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBarProps) {
   const { t } = useTranslation();
-  const { state, submitForm } = useFormFill();
+  const { state, submitForm, textStyle, applyTextStyle } = useFormFill();
   const { fields, isDirty, loading } = state;
   const [saving, setSaving] = useState(false);
   const [applying, setApplying] = useState(false);
@@ -45,10 +46,10 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
     if (!file || applying || saving) return;
     setApplying(true);
     try {
-      // Generate the filled PDF
-      const filledBlob = await submitForm(file, false);
-
-      // Call the onApply callback to reload the PDF in the viewer
+      let filledBlob = await submitForm(file, false);
+      if (applyTextStyle) {
+        filledBlob = await applyFormTextStyle(filledBlob, textStyle);
+      }
       if (onApply) {
         await onApply(filledBlob);
       }
@@ -57,14 +58,16 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
     } finally {
       setApplying(false);
     }
-  }, [file, applying, saving, submitForm, onApply]);
+  }, [file, applying, saving, submitForm, onApply, applyTextStyle, textStyle]);
 
   const handleDownload = useCallback(async () => {
     if (!file || saving || applying) return;
     setSaving(true);
     try {
-      const blob = await submitForm(file, false);
-      // Trigger browser download
+      let blob = await submitForm(file, false);
+      if (applyTextStyle) {
+        blob = await applyFormTextStyle(blob, textStyle);
+      }
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -78,7 +81,7 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
     } finally {
       setSaving(false);
     }
-  }, [file, saving, applying, submitForm]);
+  }, [file, saving, applying, submitForm, applyTextStyle, textStyle]);
 
   // Don't show when:
   // - formFill tool is active (it has its own save panel)

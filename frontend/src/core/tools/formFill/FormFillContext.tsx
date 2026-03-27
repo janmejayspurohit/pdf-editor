@@ -35,6 +35,17 @@ import type { IFormDataProvider } from '@app/tools/formFill/providers/types';
 import { PdfBoxFormProvider } from '@app/tools/formFill/providers/PdfBoxFormProvider';
 import { PdfiumFormProvider } from '@app/tools/formFill/providers/PdfiumFormProvider';
 import { fetchSignatureFieldsWithAppearances } from '@app/services/pdfiumService';
+import type { TextStyleOptions } from '@app/tools/formFill/formApi';
+
+export const DEFAULT_TEXT_STYLE: TextStyleOptions = {
+  fontFamily: 'Helvetica',
+  fontSize: 12,
+  textColor: '#000000',
+  bold: false,
+  italic: false,
+  textAlign: 'left',
+  textTransform: 'none',
+};
 
 // ---------------------------------------------------------------------------
 // FormValuesStore — external store for field values (outside React state)
@@ -210,6 +221,12 @@ export interface FormFillContextValue {
   setSignatureImage: (fieldName: string, dataUrl: string) => void;
   /** Clear a user-drawn signature image for a field */
   clearSignatureImage: (fieldName: string) => void;
+  /** Text style options to bake into the PDF on save */
+  textStyle: TextStyleOptions;
+  setTextStyle: (style: TextStyleOptions) => void;
+  /** Whether to apply text style on the next save */
+  applyTextStyle: boolean;
+  setApplyTextStyle: (apply: boolean) => void;
 }
 
 const FormFillContext = createContext<FormFillContextValue | null>(null);
@@ -312,6 +329,10 @@ export function FormFillProvider({
 
   // Signature images: fieldName → data URL (user-drawn or uploaded)
   const [signatureImages, setSignatureImagesState] = useState<Record<string, string>>({});
+
+  // Text style options shared across FormFieldSidebar and FormSaveBar
+  const [textStyle, setTextStyle] = useState<TextStyleOptions>(DEFAULT_TEXT_STYLE);
+  const [applyTextStyle, setApplyTextStyle] = useState(false);
 
   const fetchFields = useCallback(async (file: File | Blob, fileId?: string) => {
     // Increment version so any in-flight fetch for a previous file is discarded.
@@ -531,6 +552,10 @@ export function FormFillProvider({
       signatureImages,
       setSignatureImage,
       clearSignatureImage,
+      textStyle,
+      setTextStyle,
+      applyTextStyle,
+      setApplyTextStyle,
     }),
     [
       state,
@@ -550,6 +575,10 @@ export function FormFillProvider({
       signatureImages,
       setSignatureImage,
       clearSignatureImage,
+      textStyle,
+      setTextStyle,
+      applyTextStyle,
+      setApplyTextStyle,
     ]
   );
 
