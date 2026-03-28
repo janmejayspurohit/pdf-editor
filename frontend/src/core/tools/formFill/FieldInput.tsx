@@ -40,7 +40,7 @@ function FieldInputInner({
             size="xs"
             value={value}
             onChange={(e) => onChange(e.currentTarget.value)}
-            placeholder={field.tooltip || `Enter ${field.label}`}
+            placeholder={field.tooltip || `Enter ${field.label || field.name}`}
             disabled={field.readOnly}
             autosize
             minRows={2}
@@ -54,7 +54,7 @@ function FieldInputInner({
           size="xs"
           value={value}
           onChange={(e) => onChange(e.currentTarget.value)}
-          placeholder={field.tooltip || `Enter ${field.label}`}
+          placeholder={field.tooltip || `Enter ${field.label || field.name}`}
           disabled={field.readOnly}
           styles={{ input: { fontSize: '0.8125rem' } }}
         />

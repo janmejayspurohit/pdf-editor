@@ -224,6 +224,8 @@ export interface FormFillContextValue {
   /** Per-field text style options keyed by field name */
   fieldTextStyles: Record<string, TextStyleOptions>;
   setFieldTextStyle: (fieldName: string, style: TextStyleOptions) => void;
+  /** Fill form values into a blob. No side effects — safe to call for download. Apply text styles after if needed. */
+  buildFilledBlob: (file: File | Blob, flatten?: boolean) => Promise<Blob>;
 }
 
 const FormFillContext = createContext<FormFillContextValue | null>(null);
@@ -353,16 +355,20 @@ export function FormFillProvider({
         return;
       }
 
-      // When the pdfbox provider is active the backend doesn't return signature fields
-      // (they're not fillable). Fetch them via pdflib so their appearances still render.
+      // Fetch signature field appearances from PDFium so they render in SignatureFieldOverlay.
+      // Replace any backend fields with the same name (which may have been typed as 'text'
+      // if the backend didn't classify them as PDSignatureField) with the PDFium versions.
       if (providerModeRef.current === 'pdfbox') {
         try {
-          // Convert File/Blob to ArrayBuffer for pdfiumService
           const arrayBuffer = await file.arrayBuffer();
           const sigFields = await fetchSignatureFieldsWithAppearances(arrayBuffer);
           if (fetchVersionRef.current !== version) return; // stale check after async
           if (sigFields.length > 0) {
-            fields = [...fields, ...sigFields];
+            const sigFieldNames = new Set(sigFields.map(f => f.name).filter(Boolean));
+            fields = [
+              ...fields.filter(f => !sigFieldNames.has(f.name)),
+              ...sigFields,
+            ];
           }
         } catch (e) {
           console.warn('[FormFill] Failed to extract signature appearances for pdfbox mode:', e);
@@ -473,6 +479,18 @@ export function FormFillProvider({
     [valuesStore, signatureImages]
   );
 
+  const buildFilledBlob = useCallback(
+    async (file: File | Blob, flatten = false): Promise<Blob> => {
+      return providerRef.current.fillForm(
+        file,
+        valuesStore.values,
+        flatten,
+        signatureImages,
+      );
+    },
+    [valuesStore, signatureImages],
+  );
+
   const setProviderMode = useCallback(
     (mode: 'pdflib' | 'pdfbox') => {
       // Use the ref to check the current mode synchronously — avoids
@@ -558,6 +576,7 @@ export function FormFillProvider({
       clearSignatureImage,
       fieldTextStyles,
       setFieldTextStyle,
+      buildFilledBlob,
     }),
     [
       state,
@@ -579,6 +598,7 @@ export function FormFillProvider({
       clearSignatureImage,
       fieldTextStyles,
       setFieldTextStyle,
+      buildFilledBlob,
     ]
   );
 

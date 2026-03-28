@@ -15,6 +15,8 @@ import { alert } from '@app/components/toast';
 import { downloadFile } from '@app/services/downloadService';
 import { useFileEditorRightRailButtons } from '@app/components/fileEditor/fileEditorRightRailButtons';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import { useFormFill } from '@app/tools/formFill/FormFillContext';
+import { applyFieldTextStyles } from '@app/tools/formFill/formApi';
 
 
 interface FileEditorProps {
@@ -34,6 +36,8 @@ const FileEditor = ({
     const extension = detectFileExtension(fileName);
     return extension ? supportedExtensions.includes(extension) : false;
   }, [supportedExtensions]);
+
+  const { buildFilledBlob, fieldTextStyles, state: formState } = useFormFill();
 
   // Use optimized FileContext hooks
   const { state, selectors } = useFileState();
@@ -283,8 +287,20 @@ const FileEditor = ({
     const file = record ? selectors.getFile(record.id) : null;
     console.log('[FileEditor] handleDownloadFile called:', { fileId, hasRecord: !!record, hasFile: !!file, localFilePath: record?.localFilePath, isDirty: record?.isDirty });
     if (record && file) {
+      let fileToDownload: File | Blob = file;
+      if (formState.fields.length > 0) {
+        try {
+          let blob = await buildFilledBlob(file, false);
+          if (Object.keys(fieldTextStyles).length > 0) {
+            blob = await applyFieldTextStyles(blob, fieldTextStyles);
+          }
+          fileToDownload = new File([blob], file.name, { type: 'application/pdf' });
+        } catch (err) {
+          console.error('[FileEditor] Pre-download form bake failed:', err);
+        }
+      }
       const result = await downloadFile({
-        data: file,
+        data: fileToDownload,
         filename: file.name,
         localPath: record.localFilePath
       });
@@ -300,7 +316,7 @@ const FileEditor = ({
         console.log('[FileEditor] Skipping clean mark:', { savedPath: result.savedPath, isDirty: record.isDirty });
       }
     }
-  }, [activeStirlingFileStubs, selectors, fileActions]);
+  }, [activeStirlingFileStubs, selectors, fileActions, buildFilledBlob, fieldTextStyles, formState.fields.length]);
 
   const handleUnzipFile = useCallback(async (fileId: FileId) => {
     const record = activeStirlingFileStubs.find(r => r.id === fileId);

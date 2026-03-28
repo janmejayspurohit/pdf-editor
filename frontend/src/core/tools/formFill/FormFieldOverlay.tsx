@@ -22,6 +22,7 @@ import { useDocumentState } from '@embedpdf/core/react';
 import { useFormFill, useFieldValue } from '@app/tools/formFill/FormFillContext';
 import { useViewer } from '@app/contexts/ViewerContext';
 import type { FormField, WidgetCoordinates, ButtonAction } from '@app/tools/formFill/types';
+import type { TextStyleOptions } from '@app/tools/formFill/formApi';
 
 /**
  * Execute PDF JavaScript in a minimally sandboxed context.
@@ -132,6 +133,7 @@ interface WidgetInputProps {
   error?: string;
   scaleX: number;
   scaleY: number;
+  textStyle?: TextStyleOptions;
   onFocus: (fieldName: string) => void;
   onChange: (fieldName: string, value: string) => void;
   onButtonClick: (field: FormField, action?: ButtonAction | null) => void;
@@ -149,6 +151,7 @@ function WidgetInputInner({
   error,
   scaleX,
   scaleY,
+  textStyle,
   onFocus,
   onChange,
   onButtonClick,
@@ -231,6 +234,12 @@ function WidgetInputInner({
       ? Math.max(6, Math.min(height * 0.60, 14))
       : Math.max(6, height * 0.65);
 
+  const FONT_FAMILY_MAP: Record<string, string> = {
+    Helvetica: 'Helvetica, Arial, sans-serif',
+    Times: 'Times New Roman, Times, serif',
+    Courier: 'Courier New, Courier, monospace',
+  };
+
   const inputBaseStyle: React.CSSProperties = {
     width: '100%',
     height: '100%',
@@ -240,9 +249,13 @@ function WidgetInputInner({
     padding: 0,
     paddingLeft: `${Math.max(2, 4 * scaleX)}px`,
     paddingRight: `${Math.max(2, 4 * scaleX)}px`,
-    fontSize: `${fontSize}px`,
-    fontFamily: 'Helvetica, Arial, sans-serif',
-    color: '#000',
+    fontSize: textStyle ? `${textStyle.fontSize * scaleY}px` : `${fontSize}px`,
+    fontFamily: textStyle ? (FONT_FAMILY_MAP[textStyle.fontFamily] ?? 'Helvetica, Arial, sans-serif') : 'Helvetica, Arial, sans-serif',
+    fontWeight: textStyle?.bold ? 'bold' : 'normal',
+    fontStyle: textStyle?.italic ? 'italic' : 'normal',
+    color: textStyle?.textColor ?? '#000',
+    textAlign: textStyle?.textAlign ?? 'left',
+    textTransform: (textStyle?.textTransform === 'none' ? 'none' : textStyle?.textTransform) ?? 'none',
     boxSizing: 'border-box',
     lineHeight: 'normal',
   };
@@ -526,7 +539,7 @@ export function FormFieldOverlay({
   pageHeight,
   fileId,
 }: FormFieldOverlayProps) {
-  const { setValue, setActiveField, fieldsByPage, state, forFileId } = useFormFill();
+  const { setValue, setActiveField, fieldsByPage, state, forFileId, fieldTextStyles } = useFormFill();
   const { activeFieldName, validationErrors } = state;
   const { printActions, scrollActions, exportActions } = useViewer();
 
@@ -671,6 +684,7 @@ export function FormFieldOverlay({
                 error={validationErrors[field.name]}
                 scaleX={scaleX}
                 scaleY={scaleY}
+                textStyle={fieldTextStyles[field.name]}
                 onFocus={handleFocus}
                 onChange={handleChange}
                 onButtonClick={handleButtonClick}

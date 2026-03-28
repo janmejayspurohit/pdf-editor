@@ -1,4 +1,5 @@
 import React, { useEffect, useCallback, useState, useRef, useMemo } from 'react';
+import { useDebouncedCallback } from '@mantine/hooks';
 import {
   Button,
   Text,
@@ -20,17 +21,16 @@ import { useNavigation } from '@app/contexts/NavigationContext';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useFileState } from '@app/contexts/FileContext';
 import { Skeleton } from '@mantine/core';
-import { isStirlingFile, getFormFillFileId } from '@app/types/fileContext';
+import { isStirlingFile, getFormFillFileId, type StirlingFile } from '@app/types/fileContext';
 import type { BaseToolProps } from '@app/types/tool';
 import type { FormField } from '@app/tools/formFill/types';
 import { FieldInput } from '@app/tools/formFill/FieldInput';
 import { FIELD_TYPE_ICON, FIELD_TYPE_COLOR } from '@app/tools/formFill/fieldMeta';
-import SaveIcon from '@mui/icons-material/Save';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import DescriptionIcon from '@mui/icons-material/Description';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
-import TextFormatIcon from '@mui/icons-material/TextFormat';
+import SettingsIcon from '@mui/icons-material/Settings';
 import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import FormatItalicIcon from '@mui/icons-material/FormatItalic';
 import {
@@ -59,10 +59,10 @@ const FormFill = (_props: BaseToolProps) => {
   const {
     state: formState,
     fetchFields,
+    buildFilledBlob,
     submitForm,
     setValue,
     setActiveField,
-    validateForm,
     fieldTextStyles,
     setFieldTextStyle,
   } = useFormFill();
@@ -76,12 +76,57 @@ const FormFill = (_props: BaseToolProps) => {
   const [saving, setSaving] = useState(false);
   const [extracting, setExtracting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-
   const [styleOpenFor, setStyleOpenFor] = useState<string | null>(null);
-  const [lastSavedFlatten, setLastSavedFlatten] = useState<boolean | null>(null);
-  const flattenChanged = lastSavedFlatten !== null && flatten !== lastSavedFlatten;
 
+  const currentFileRef = useRef<StirlingFile | null>(null);
   const savingRef = useRef(false);
+
+  // Build filled blob (values only) and replace file in context.
+  // Text styles stay in context state and are applied fresh at download time.
+  const doSave = useCallback(async () => {
+    const file = currentFileRef.current;
+    if (!file || !isStirlingFile(file)) return;
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const blob = await submitForm(file, false); // marks form clean via MARK_CLEAN
+      window.dispatchEvent(new CustomEvent('formfill:apply', { detail: { blob } }));
+    } catch (err: any) {
+      const message = err?.response?.status === 413
+        ? 'File too large. Try reducing the PDF size first.'
+        : err?.message || 'Failed to save';
+      setSaveError(message);
+      console.error('[FormFill] Save failed:', err);
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
+    }
+  }, [submitForm]);
+
+  // Ctrl+S / Cmd+S → save
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        doSave();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [doSave]);
+
+  // Auto-save 2 s after the last value change
+  const debouncedAutoSave = useDebouncedCallback(() => {
+    if (!savingRef.current) doSave();
+  }, 2000);
+
+  useEffect(() => {
+    if (formState.isDirty) {
+      debouncedAutoSave();
+    }
+  }, [allValues, fieldTextStyles, formState.isDirty]);
 
   const handleExtractJson = useCallback(() => {
     setExtracting(true);
@@ -100,10 +145,9 @@ const FormFill = (_props: BaseToolProps) => {
     }
   }, [allValues]);
   const activeFieldRef = useRef<HTMLDivElement>(null);
-  const isDirtyRef = useRef(formState.isDirty);
-  isDirtyRef.current = formState.isDirty;
 
   const activeFiles = selectors.getFiles();
+
   const selectedFileIds = fileState.ui.selectedFileIds;
   const currentFile = useMemo(() => {
     if (activeFiles.length === 0) return null;
@@ -115,6 +159,8 @@ const FormFill = (_props: BaseToolProps) => {
     }
     return activeFiles[0];
   }, [activeFiles, selectedFileIds]);
+
+  currentFileRef.current = currentFile;
 
   const handleExtractCsv = useCallback(async () => {
     if (!currentFile) return;
@@ -165,64 +211,32 @@ const FormFill = (_props: BaseToolProps) => {
     }
   }, [formState.activeFieldName]);
 
-  const handleSave = useCallback(async () => {
-    // Ref-based guard prevents concurrent saves that cause file duplication
-    if (savingRef.current) return;
-    if (!currentFile || !isStirlingFile(currentFile)) return;
-
-    if (!validateForm()) {
-      setSaveError('Please fill in all required fields');
-      return;
-    }
-
-    savingRef.current = true;
+  const handleDownload = useCallback(async () => {
+    const file = currentFileRef.current;
+    if (!file || !isStirlingFile(file)) return;
     setSaving(true);
     setSaveError(null);
-
     try {
-      let filledBlob = await submitForm(currentFile, flatten);
-
+      let blob = await buildFilledBlob(file, flatten);
       if (Object.keys(fieldTextStyles).length > 0) {
-        filledBlob = await applyFieldTextStyles(filledBlob, fieldTextStyles);
+        blob = await applyFieldTextStyles(blob, fieldTextStyles);
       }
-
-      // Track the flatten value at save so toggling it later re-enables Save
-      setLastSavedFlatten(flatten);
-
-      // Dispatch to the viewer's handleFormApply via custom event.
-      // This ensures the viewer tracks the new file ID, preserves
-      // scroll position and rotation — instead of our own consumeFiles
-      // call which would lose the viewer's file tracking context.
-      const event = new CustomEvent('formfill:apply', { detail: { blob: filledBlob } });
-      window.dispatchEvent(event);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 250);
     } catch (err: any) {
       const message = err?.response?.status === 413
         ? 'File too large. Try reducing the PDF size first.'
-        : err?.response?.status === 400
-        ? 'Invalid form data. Please check all fields.'
-        : err?.message || 'Failed to save filled form';
+        : err?.message || 'Failed to build filled form';
       setSaveError(message);
-      console.error('[FormFill] Save failed:', err);
+      console.error('[FormFill] Download failed:', err);
     } finally {
-      savingRef.current = false;
       setSaving(false);
     }
-  }, [currentFile, submitForm, flatten, validateForm, fieldTextStyles]);
-
-  // Keyboard shortcut: Ctrl+S to save
-  const flattenChangedRef = useRef(flattenChanged);
-  flattenChangedRef.current = flattenChanged;
-  useEffect(() => {
-    if (!isActive) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        if (isDirtyRef.current || flattenChangedRef.current) handleSave();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isActive, handleSave]);
+  }, [buildFilledBlob, flatten, fieldTextStyles]);
 
   // Data loss prevention: warn on beforeunload if dirty
   useEffect(() => {
@@ -378,16 +392,6 @@ const FormFill = (_props: BaseToolProps) => {
             {/* Action buttons */}
             <div className={styles.actionBar}>
               <div className={styles.primaryActions}>
-                <Button
-                  leftSection={<SaveIcon sx={{ fontSize: 14 }} />}
-                  size="xs"
-                  onClick={handleSave}
-                  loading={saving}
-                  disabled={!formState.isDirty && !flattenChanged}
-                >
-                  Save
-                </Button>
-
                 <Tooltip label="Re-scan fields" withArrow position="bottom">
                   <ActionIcon
                     variant="light"
@@ -508,8 +512,8 @@ const FormFill = (_props: BaseToolProps) => {
                           <Tooltip label="Text style" withArrow position="left">
                             <ActionIcon
                               size="xs"
-                              variant={fieldTextStyles[field.name] ? 'filled' : 'subtle'}
-                              color={fieldTextStyles[field.name] ? 'blue' : 'gray'}
+                              variant={fieldTextStyles[field.name] ? 'filled' : 'light'}
+                              color="blue"
                               ml="auto"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -517,27 +521,18 @@ const FormFill = (_props: BaseToolProps) => {
                               }}
                               aria-label="Text style"
                             >
-                              <TextFormatIcon sx={{ fontSize: 12 }} />
+                              <SettingsIcon sx={{ fontSize: 14 }} />
                             </ActionIcon>
                           </Tooltip>
                         )}
                       </div>
-
-                      {field.type !== 'button' && field.type !== 'signature' && (
-                        <div className={styles.fieldInputWrap}>
-                          <FieldInput
-                            field={field}
-                            onValueChange={handleValueChange}
-                          />
-                        </div>
-                      )}
 
                       {field.type === 'text' && (
                         <Collapse in={styleOpenFor === field.name} onClick={(e) => e.stopPropagation()}>
                           {(() => {
                             const s: TextStyleOptions = fieldTextStyles[field.name] ?? DEFAULT_TEXT_STYLE;
                             return (
-                              <div className={styles.textStylePanel}>
+                              <div className={styles.textStylePanel} style={{ marginTop: '0.375rem' }}>
                                 <Select
                                   label="Font"
                                   size="xs"
@@ -558,12 +553,12 @@ const FormFill = (_props: BaseToolProps) => {
                                   />
                                   <div style={{ display: 'flex', gap: '0.25rem', paddingBottom: '0.15rem' }}>
                                     <Tooltip label="Bold" withArrow>
-                                      <ActionIcon size="sm" variant={s.bold ? 'filled' : 'light'} color={s.bold ? 'blue' : 'gray'} onClick={() => setFieldTextStyle(field.name, { ...s, bold: !s.bold })} aria-label="Bold">
+                                      <ActionIcon size="sm" variant="filled" color={s.bold ? 'blue' : 'dark'} onClick={() => setFieldTextStyle(field.name, { ...s, bold: !s.bold })} aria-label="Bold">
                                         <FormatBoldIcon sx={{ fontSize: 14 }} />
                                       </ActionIcon>
                                     </Tooltip>
                                     <Tooltip label="Italic" withArrow>
-                                      <ActionIcon size="sm" variant={s.italic ? 'filled' : 'light'} color={s.italic ? 'blue' : 'gray'} onClick={() => setFieldTextStyle(field.name, { ...s, italic: !s.italic })} aria-label="Italic">
+                                      <ActionIcon size="sm" variant="filled" color={s.italic ? 'blue' : 'dark'} onClick={() => setFieldTextStyle(field.name, { ...s, italic: !s.italic })} aria-label="Italic">
                                         <FormatItalicIcon sx={{ fontSize: 14 }} />
                                       </ActionIcon>
                                     </Tooltip>
@@ -591,15 +586,18 @@ const FormFill = (_props: BaseToolProps) => {
                         </Collapse>
                       )}
 
-                      {hasError && (
-                        <div className={styles.fieldError}>
-                          {validationErrors[field.name]}
+                      {field.type !== 'button' && field.type !== 'signature' && (
+                        <div className={styles.fieldInputWrap}>
+                          <FieldInput
+                            field={field}
+                            onValueChange={handleValueChange}
+                          />
                         </div>
                       )}
 
-                      {field.tooltip && (
-                        <div className={styles.fieldHint}>
-                          {field.tooltip}
+                      {hasError && (
+                        <div className={styles.fieldError}>
+                          {validationErrors[field.name]}
                         </div>
                       )}
                     </div>
@@ -615,10 +613,9 @@ const FormFill = (_props: BaseToolProps) => {
       {!formState.loading && formState.fields.length > 0 && (
         <div className={styles.statusBar}>
           <span>
-            {(formState.isDirty || flattenChanged) && <span className={styles.unsavedDot} />}
-            {formState.isDirty || flattenChanged ? 'Unsaved changes' : 'All saved'}
+            {formState.isDirty && <span className={styles.unsavedDot} />}
+            {saving ? 'Saving…' : formState.isDirty ? 'Unsaved changes' : 'Ready'}
           </span>
-          <span>Ctrl+S to save</span>
         </div>
       )}
     </div>

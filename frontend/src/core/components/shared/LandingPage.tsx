@@ -128,7 +128,7 @@ const LandingPage = () => {
                 marginTop: '0.8rem',
                 marginBottom: '0.8rem'
               }}
-              onMouseLeave={() => setIsUploadHover(false)}
+              onMouseLeave={() => setIsUploadHover(true)}
             >
               {/* Show both buttons only when recents exist; otherwise show a single Upload button */}
               {hasRecents && (

@@ -121,10 +121,7 @@ export async function applyFieldTextStyles(
 ): Promise<Blob> {
   const formData = new FormData();
   formData.append('fileInput', file);
-  formData.append(
-    'fieldStyles',
-    new Blob([JSON.stringify(fieldStyles)], { type: 'application/json' })
-  );
+  formData.append('fieldStyles', JSON.stringify(fieldStyles));
 
   const response = await apiClient.post('/api/v1/misc/apply-field-text-styles', formData, {
     responseType: 'blob',
