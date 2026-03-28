@@ -212,6 +212,8 @@ const EmbedPdfViewerContent = ({
   // FormFill tool mode — uses PDFBox backend for full-fidelity form handling
   const isFormFillToolActive = (selectedTool as string) === 'formFill';
 
+  const isAlphaEditorActive = (selectedTool as string) === 'pdfAlphaEditor';
+
   // Form overlays are shown in BOTH modes:
   // - Normal viewer: form overlays visible (PDFium WASM, frontend-only)
   // - formFill tool: form overlays visible (PDFBox, backend)
@@ -979,6 +981,7 @@ const EmbedPdfViewerContent = ({
               showBakedAnnotations={isAnnotationsVisible}
               enableRedaction={shouldEnableRedaction}
               enableFormFill={shouldEnableFormFill}
+              enableAlphaEditor={isAlphaEditorActive}
               isManualRedactionMode={isManualRedactMode}
               signatureApiRef={signatureApiRef as React.RefObject<any>}
               annotationApiRef={annotationApiRef as React.RefObject<any>}

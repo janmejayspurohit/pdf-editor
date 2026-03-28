@@ -21,6 +21,7 @@ import { useLogoAssets } from '@app/hooks/useLogoAssets';
 import AppConfigLoader from '@app/components/shared/AppConfigLoader';
 import { RedactionProvider } from "@app/contexts/RedactionContext";
 import { FormFillProvider } from "@app/tools/formFill/FormFillContext";
+import { AlphaEditorProvider } from "@app/tools/pdfAlphaEditor/AlphaEditorContext";
 
 // Component to run app-level initialization (must be inside AppProviders for context access)
 function AppInitializer() {
@@ -109,11 +110,13 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                                     <SignatureProvider>
                                       <RedactionProvider>
                                       <FormFillProvider>
+                                      <AlphaEditorProvider>
                                       <AnnotationProvider>
                                         <RightRailProvider>
                                           {children}
                                         </RightRailProvider>
                                       </AnnotationProvider>
+                                      </AlphaEditorProvider>
                                       </FormFillProvider>
                                       </RedactionProvider>
                                     </SignatureProvider>

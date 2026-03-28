@@ -39,6 +39,7 @@ import SingleLargePage from "@app/tools/SingleLargePage";
 import PageLayout from "@app/tools/PageLayout";
 import UnlockPdfForms from "@app/tools/UnlockPdfForms";
 import FormFill from "@app/tools/formFill/FormFill";
+import PdfAlphaEditor from '@app/tools/pdfAlphaEditor/PdfAlphaEditor';
 import RemoveCertificateSign from "@app/tools/RemoveCertificateSign";
 import RemoveImage from "@app/tools/RemoveImage";
 import CertSign from "@app/tools/CertSign";
@@ -371,6 +372,19 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
         supportsAutomate: false,
         synonyms: ['form', 'fill', 'fillable', 'input', 'field', 'acroform'],
+      },
+      pdfAlphaEditor: {
+        icon: <LocalIcon icon="edit-rounded" width="1.5rem" height="1.5rem" />,
+        name: t('home.pdfAlphaEditor.title', 'PDF Alpha Editor'),
+        component: PdfAlphaEditor,
+        description: t('home.pdfAlphaEditor.desc', 'Fix typos and edit text directly in your PDF'),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        workbench: 'viewer' as const,
+        endpoints: ['alpha-editor/apply'],
+        automationSettings: null,
+        supportsAutomate: false,
+        synonyms: ['edit', 'text', 'typo', 'fix', 'alpha', 'inline'],
       },
       changePermissions: {
         icon: <LocalIcon icon="lock-outline" width="1.5rem" height="1.5rem" />,

@@ -63,6 +63,8 @@ import { ButtonAppearanceOverlay } from '@app/tools/formFill/ButtonAppearanceOve
 import SignatureFieldOverlay from '@app/components/viewer/SignatureFieldOverlay';
 import { SignatureFieldModal } from '@app/tools/formFill/SignatureFieldModal';
 import { useFormFill } from '@app/tools/formFill/FormFillContext';
+import { AlphaEditorOverlay } from '@app/tools/pdfAlphaEditor/AlphaEditorOverlay';
+import { useAlphaEditor } from '@app/tools/pdfAlphaEditor/AlphaEditorContext';
 import { CommentsSidebar } from '@app/components/viewer/CommentsSidebar';
 import { CommentAuthorProvider } from '@app/contexts/CommentAuthorContext';
 import { accountService } from '@app/services/accountService';
@@ -90,9 +92,10 @@ interface LocalEmbedPDFProps {
   isSignMode?: boolean;
   /** Controls CSS filter applied only to rendered PDF canvas tiles */
   pdfRenderMode?: 'normal' | 'dark' | 'sepia';
+  enableAlphaEditor?: boolean;
 }
 
-export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, enableRedaction = false, enableFormFill = false, isManualRedactionMode = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef, redactionTrackerRef, fileId, isCommentsSidebarVisible = false, commentsSidebarRightOffset = '0rem', isSignMode = false, pdfRenderMode = 'normal' }: LocalEmbedPDFProps) {
+export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, enableRedaction = false, enableFormFill = false, isManualRedactionMode = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef, redactionTrackerRef, fileId, isCommentsSidebarVisible = false, commentsSidebarRightOffset = '0rem', isSignMode = false, pdfRenderMode = 'normal', enableAlphaEditor = false }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: Rect}>>([]);
@@ -101,6 +104,7 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
   // Signature field modal state (for form-fill mode)
   const [activeSignatureField, setActiveSignatureField] = useState<string | null>(null);
   const { state: formState, setSignatureImage, signatureImages } = useFormFill();
+  const { state: alphaEditorState } = useAlphaEditor();
 
   useEffect(() => {
     accountService.getAccountData().then((data) => {
@@ -827,6 +831,17 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
                               pageWidth={width}
                               pageHeight={height}
                               fileId={fileId}
+                            />
+                          )}
+
+                          {/* AlphaEditorOverlay for inline PDF text editing */}
+                          {enableAlphaEditor && (
+                            <AlphaEditorOverlay
+                              documentId={documentId}
+                              pageIndex={pageIndex}
+                              pageText={alphaEditorState.pageTexts.get(pageIndex) ?? null}
+                              pageWidthPx={width}
+                              pageHeightPx={height}
                             />
                           )}
 

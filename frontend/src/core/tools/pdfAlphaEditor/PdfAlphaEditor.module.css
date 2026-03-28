@@ -1,0 +1,99 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--mantine-color-gray-3);
+  flex-shrink: 0;
+}
+
+.fileName {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--mantine-color-gray-8);
+}
+
+.loaderRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.changesList {
+  flex: 1;
+  min-height: 0;
+}
+
+.changesListInner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem;
+}
+
+.changeItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.25rem;
+  padding: 0.375rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid var(--mantine-color-gray-3);
+  background: var(--mantine-color-gray-0);
+}
+
+.changeTexts {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.originalText {
+  max-width: 6rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--mantine-color-red-7);
+  text-decoration: line-through;
+}
+
+.arrow {
+  color: var(--mantine-color-gray-5);
+  flex-shrink: 0;
+}
+
+.replacementText {
+  max-width: 6rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--mantine-color-green-7);
+}
+
+.undoBtn {
+  flex-shrink: 0;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid var(--mantine-color-gray-3);
+  flex-shrink: 0;
+}
+
+.saveBtn {
+  flex-shrink: 0;
+}

@@ -1,0 +1,45 @@
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: auto;
+  z-index: 10;
+  overflow: hidden;
+}
+
+.lineHit {
+  position: absolute;
+  pointer-events: auto;
+  cursor: text;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.lineHit:hover {
+  background-color: rgba(30, 144, 255, 0.15);
+}
+
+.lineHitInactive {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.editInput,
+.editTextarea {
+  position: absolute;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0;
+  margin: 0;
+  resize: none;
+  font-family: inherit;
+  font-size: var(--alpha-edit-font-size);
+  line-height: 1;
+  overflow: hidden;
+}
+
+.committed {
+  border-bottom: 2px solid #f59e0b;
+}
