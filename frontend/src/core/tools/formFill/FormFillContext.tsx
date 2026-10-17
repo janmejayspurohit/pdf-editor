@@ -226,6 +226,8 @@ export interface FormFillContextValue {
   setFieldTextStyle: (fieldName: string, style: TextStyleOptions) => void;
   /** Fill form values into a blob. No side effects — safe to call for download. Apply text styles after if needed. */
   buildFilledBlob: (file: File | Blob, flatten?: boolean) => Promise<Blob>;
+  /** Mark the form as clean (no unsaved changes) without any backend call. */
+  markClean: () => void;
 }
 
 const FormFillContext = createContext<FormFillContextValue | null>(null);
@@ -532,6 +534,10 @@ export function FormFillProvider({
     [valuesStore]
   );
 
+  const markClean = useCallback(() => {
+    dispatch({ type: 'MARK_CLEAN' });
+  }, []);
+
   const reset = useCallback(() => {
     // Increment version to invalidate any in-flight fetch
     fetchVersionRef.current++;
@@ -577,6 +583,7 @@ export function FormFillProvider({
       fieldTextStyles,
       setFieldTextStyle,
       buildFilledBlob,
+      markClean,
     }),
     [
       state,
@@ -599,6 +606,7 @@ export function FormFillProvider({
       fieldTextStyles,
       setFieldTextStyle,
       buildFilledBlob,
+      markClean,
     ]
   );
 

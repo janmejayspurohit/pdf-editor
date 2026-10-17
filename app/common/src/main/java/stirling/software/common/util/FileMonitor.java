@@ -116,14 +116,16 @@ public class FileMonitor {
         readyForProcessingFiles.clear();
 
         if (path2KeyMapping.isEmpty()) {
-            log.warn("Not monitoring any directories; attempting to re-register root paths.");
-            for (Path rootDir : rootDirs) {
-                if (Files.exists(
-                        rootDir)) { // if the root directory exists, re-register the root directory
-                    try {
-                        recursivelyRegisterEntry(rootDir);
-                    } catch (IOException e) {
-                        log.error("unable to register monitoring for {}", rootDir, e);
+            boolean anyExists = rootDirs.stream().anyMatch(Files::exists);
+            if (anyExists) {
+                log.warn("Not monitoring any directories; attempting to re-register root paths.");
+                for (Path rootDir : rootDirs) {
+                    if (Files.exists(rootDir)) {
+                        try {
+                            recursivelyRegisterEntry(rootDir);
+                        } catch (IOException e) {
+                            log.error("unable to register monitoring for {}", rootDir, e);
+                        }
                     }
                 }
             }

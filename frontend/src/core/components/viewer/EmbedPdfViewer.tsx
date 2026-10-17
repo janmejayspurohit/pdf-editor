@@ -175,7 +175,6 @@ const EmbedPdfViewerContent = ({
   // Track the file ID we should be viewing after a save (to handle list reordering)
   const pendingFileIdRef = useRef<string | null>(null);
 
-  const formApplyInProgressRef = useRef(false);
 
   // Get redaction context
   const { redactionsApplied, setRedactionsApplied } = useRedaction();
@@ -635,71 +634,6 @@ const EmbedPdfViewerContent = ({
       console.error('Apply changes failed:', error);
     }
   }, [currentFile, activeFiles, activeFileIndex, exportActions, actions, selectors, setHasUnsavedChanges, setRedactionsApplied, rotationState.rotation]);
-
-  // Apply form fill changes - reload the filled PDF into the viewer
-  const handleFormApply = useCallback(async (filledBlob: Blob) => {
-    if (formApplyInProgressRef.current) return;
-    if (!currentFile || activeFileIds.length === 0) return;
-
-    formApplyInProgressRef.current = true;
-    try {
-      console.log('[Viewer] Applying form fill changes - reloading filled PDF');
-
-      // Use the continuously tracked scroll position
-      const pageToRestore = lastKnownScrollPageRef.current;
-
-      // Save the current rotation to restore after reload
-      const currentRotation = rotationState.rotation ?? 0;
-
-      // Convert Blob to File
-      const filename = currentFile.name || 'document.pdf';
-      const file = new File([filledBlob], filename, { type: 'application/pdf' });
-
-      // Get current file info for creating the updated version
-      const currentFileId = activeFiles[activeFileIndex]?.fileId;
-      if (!currentFileId) throw new Error('Current file ID not found');
-
-      const parentStub = selectors.getStirlingFileStub(currentFileId);
-      if (!parentStub) throw new Error('Parent stub not found');
-
-      // Create StirlingFiles and stubs for version history
-      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, 'multiTool');
-
-      // Store the page to restore after file replacement
-      pendingScrollRestoreRef.current = pageToRestore;
-      scrollRestoreAttemptsRef.current = 0;
-
-      // Store the rotation to restore after file replacement
-      pendingRotationRestoreRef.current = currentRotation;
-      rotationRestoreAttemptsRef.current = 0;
-
-      // Store the new file ID for tracking
-      const newFileId = stubs[0]?.id;
-      if (newFileId) {
-        pendingFileIdRef.current = newFileId;
-      }
-
-      // Replace the current file in context
-      await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
-
-      console.log('[Viewer] Form fill changes applied successfully');
-    } catch (error) {
-      console.error('[Viewer] Apply form changes failed:', error);
-    } finally {
-      formApplyInProgressRef.current = false;
-    }
-  }, [currentFile, activeFiles, activeFileIndex, actions, selectors, activeFileIds.length, rotationState.rotation]);
-
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const blob = (e as CustomEvent).detail?.blob;
-      if (blob) {
-        handleFormApply(blob);
-      }
-    };
-    window.addEventListener('formfill:apply', handler);
-    return () => window.removeEventListener('formfill:apply', handler);
-  }, [handleFormApply]);
 
   // Discard pending redactions but save already-applied ones
   // This is called when user clicks "Discard & Leave" - we want to:

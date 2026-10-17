@@ -60,11 +60,11 @@ const FormFill = (_props: BaseToolProps) => {
     state: formState,
     fetchFields,
     buildFilledBlob,
-    submitForm,
     setValue,
     setActiveField,
     fieldTextStyles,
     setFieldTextStyle,
+    markClean,
   } = useFormFill();
 
   const allValues = useAllFormValues();
@@ -81,29 +81,13 @@ const FormFill = (_props: BaseToolProps) => {
   const currentFileRef = useRef<StirlingFile | null>(null);
   const savingRef = useRef(false);
 
-  // Build filled blob (values only) and replace file in context.
-  // Text styles stay in context state and are applied fresh at download time.
-  const doSave = useCallback(async () => {
-    const file = currentFileRef.current;
-    if (!file || !isStirlingFile(file)) return;
+  // Mark form values as saved without reloading the viewer.
+  // Field values are already shown in real-time via FormFieldOverlay.
+  // Text styles and values are baked into the PDF only at download time.
+  const doSave = useCallback(() => {
     if (savingRef.current) return;
-    savingRef.current = true;
-    setSaving(true);
-    setSaveError(null);
-    try {
-      const blob = await submitForm(file, false); // marks form clean via MARK_CLEAN
-      window.dispatchEvent(new CustomEvent('formfill:apply', { detail: { blob } }));
-    } catch (err: any) {
-      const message = err?.response?.status === 413
-        ? 'File too large. Try reducing the PDF size first.'
-        : err?.message || 'Failed to save';
-      setSaveError(message);
-      console.error('[FormFill] Save failed:', err);
-    } finally {
-      savingRef.current = false;
-      setSaving(false);
-    }
-  }, [submitForm]);
+    markClean();
+  }, [markClean]);
 
   // Ctrl+S / Cmd+S → save
   useEffect(() => {
@@ -126,7 +110,7 @@ const FormFill = (_props: BaseToolProps) => {
     if (formState.isDirty) {
       debouncedAutoSave();
     }
-  }, [allValues, fieldTextStyles, formState.isDirty]);
+  }, [allValues, formState.isDirty]);
 
   const handleExtractJson = useCallback(() => {
     setExtracting(true);
